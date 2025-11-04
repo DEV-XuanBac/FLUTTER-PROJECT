@@ -30,7 +30,6 @@ class _AppHomeState extends State<AppHome> {
 
   @override
   void initState() {
-    categories = getCategories();
     foods = getFastFood();
     happys = getHappyFood();
     super.initState();
@@ -71,6 +70,7 @@ class _AppHomeState extends State<AppHome> {
 
   @override
   Widget build(BuildContext context) {
+    categories = getCategories(context);
     return Scaffold(
       appBar: appBar(),
       backgroundColor: AppColors.of(context).primaryColor2,

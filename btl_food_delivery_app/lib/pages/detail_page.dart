@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:btl_food_delivery_app/core/constants/stripe_key_constants.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
+import 'package:btl_food_delivery_app/l10n/l10n.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:btl_food_delivery_app/services/widget_support.dart';
@@ -132,7 +133,9 @@ class _DetailPageState extends State<DetailPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              isExpanded ? "Read less" : "Read more",
+                              isExpanded
+                                  ? S.of(context).readLess
+                                  : S.of(context).readMore,
                               style: AppTextStyles.of(context).light24.copyWith(
                                 color: AppColors.of(context).primaryColor8,
                               ),
@@ -154,7 +157,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
 
               Text(
-                "Quantity: ",
+                S.of(context).quantity,
                 style: AppTextStyles.of(
                   context,
                 ).bold32.copyWith(color: AppColors.of(context).neutralColor11),
@@ -286,7 +289,7 @@ class _DetailPageState extends State<DetailPage> {
                         SnackBar(
                           backgroundColor: Colors.green,
                           content: Text(
-                            "Order placed successfully",
+                            S.of(context).orderSuccess,
                             style: AppTextStyles.of(context).bold24.copyWith(
                               color: AppColors.of(context).neutralColor12,
                             ),
@@ -298,7 +301,7 @@ class _DetailPageState extends State<DetailPage> {
                         SnackBar(
                           backgroundColor: Colors.red,
                           content: Text(
-                            "Add some money to your Wallet",
+                            S.of(context).addMoneyWallet,
                             style: AppTextStyles.of(context).bold24.copyWith(
                               color: AppColors.of(context).neutralColor12,
                             ),
@@ -319,7 +322,7 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                       child: Center(
                         child: Text(
-                          "ORDER NOW",
+                          S.of(context).ordersNow,
                           style: AppTextStyles.of(context).bold32.copyWith(
                             color: AppColors.of(context).neutralColor1,
                           ),
@@ -369,7 +372,7 @@ class _DetailPageState extends State<DetailPage> {
                     Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.green),
-                        Text("Payment Successful"),
+                        Text(S.of(context).paymentSuccessful),
                       ],
                     ),
                   ],
@@ -385,7 +388,7 @@ class _DetailPageState extends State<DetailPage> {
       print("Error is: --> $e");
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(content: Text("Cancelled")),
+        builder: (_) => AlertDialog(content: Text(S.of(context).cancelled)),
       );
     } catch (e) {
       print("$e");
@@ -434,7 +437,7 @@ class _DetailPageState extends State<DetailPage> {
                 children: [
                   SizedBox(width: 30.w),
                   Text(
-                    "Add the address",
+                    S.of(context).addAddress,
                     style: AppTextStyles.of(context).bold32.copyWith(
                       color: AppColors.of(context).primaryColor10,
                     ),
@@ -462,7 +465,7 @@ class _DetailPageState extends State<DetailPage> {
                   controller: addressController,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    hintText: "Address",
+                    hintText: S.of(context).address,
                     hintStyle: AppTextStyles.of(context).regular24.copyWith(
                       color: AppColors.of(context).neutralColor11,
                     ),
@@ -489,7 +492,7 @@ class _DetailPageState extends State<DetailPage> {
                     ),
                     child: Center(
                       child: Text(
-                        "Add",
+                        S.of(context).add,
                         style: AppTextStyles.of(context).bold24.copyWith(
                           color: AppColors.of(context).neutralColor1,
                         ),

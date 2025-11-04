@@ -1,4 +1,5 @@
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
+import 'package:btl_food_delivery_app/l10n/l10n.dart';
 import 'package:btl_food_delivery_app/main.dart';
 import 'package:btl_food_delivery_app/pages/onboarding.dart';
 import 'package:btl_food_delivery_app/services/auth_methods.dart';
@@ -40,7 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Center(
                     child: Text(
-                      "Profile",
+                      S.of(context).profile,
                       style: AppWidget.HeadlineTextFieldStyle(context),
                     ),
                   ),
@@ -100,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Name:",
+                                          S.of(context).name,
                                           style: AppTextStyles.of(context)
                                               .bold20
                                               .copyWith(
@@ -156,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Email:",
+                                          S.of(context).email,
                                           style: AppTextStyles.of(context)
                                               .bold20
                                               .copyWith(
@@ -226,7 +227,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                       SizedBox(width: 20.w),
                                       Text(
-                                        "English",
+                                        S.of(context).english,
                                         style: AppTextStyles.of(context)
                                             .regular24
                                             .copyWith(
@@ -286,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                       SizedBox(width: 20.w),
                                       Text(
-                                        "LogOut",
+                                        S.of(context).logOut,
                                         style: AppTextStyles.of(context)
                                             .regular24
                                             .copyWith(

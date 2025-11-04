@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:btl_food_delivery_app/core/constants/stripe_key_constants.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
+import 'package:btl_food_delivery_app/l10n/l10n.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:btl_food_delivery_app/services/widget_support.dart';
@@ -78,7 +79,7 @@ class _WalletPageState extends State<WalletPage> {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: "Added ",
+                                text: S.of(context).added,
                                 style: AppTextStyles.of(context).regular20
                                     .copyWith(
                                       color: AppColors.of(
@@ -96,7 +97,7 @@ class _WalletPageState extends State<WalletPage> {
                                     ),
                               ),
                               TextSpan(
-                                text: "to your wallet",
+                                text: S.of(context).toYourWallet,
                                 style: AppTextStyles.of(context).regular20
                                     .copyWith(
                                       color: AppColors.of(
@@ -134,7 +135,7 @@ class _WalletPageState extends State<WalletPage> {
                 children: [
                   Center(
                     child: Text(
-                      "Wallet",
+                      S.of(context).wallet,
                       style: AppWidget.HeadlineTextFieldStyle(context),
                     ),
                   ),
@@ -182,7 +183,7 @@ class _WalletPageState extends State<WalletPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Your wallet",
+                                          S.of(context).yourWallet,
                                           style: AppTextStyles.of(context)
                                               .regular24
                                               .copyWith(
@@ -334,7 +335,7 @@ class _WalletPageState extends State<WalletPage> {
                               ),
                               child: Center(
                                 child: Text(
-                                  "Add money",
+                                  S.of(context).addMoney,
                                   style: AppTextStyles.of(context).bold32
                                       .copyWith(
                                         color: AppColors.of(
@@ -360,7 +361,7 @@ class _WalletPageState extends State<WalletPage> {
                                 children: [
                                   SizedBox(height: 5.h),
                                   Text(
-                                    "Your transactions",
+                                    S.of(context).yourTrans,
                                     style: AppTextStyles.of(context).bold32
                                         .copyWith(
                                           color: AppColors.of(
@@ -435,7 +436,7 @@ class _WalletPageState extends State<WalletPage> {
                     Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.green),
-                        Text("Payment Successful"),
+                        Text(S.of(context).paymentSuccessful),
                       ],
                     ),
                   ],
@@ -451,7 +452,7 @@ class _WalletPageState extends State<WalletPage> {
       print("Error is: --> $e");
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(content: Text("Cancelled")),
+        builder: (_) => AlertDialog(content: Text(S.of(context).cancelled)),
       );
     } catch (e) {
       print("$e");
@@ -500,7 +501,7 @@ class _WalletPageState extends State<WalletPage> {
                 children: [
                   SizedBox(width: 30.w),
                   Text(
-                    "Add amount",
+                    S.of(context).addAmount,
                     style: AppTextStyles.of(context).bold32.copyWith(
                       color: AppColors.of(context).primaryColor10,
                     ),
@@ -528,7 +529,7 @@ class _WalletPageState extends State<WalletPage> {
                   controller: amountController,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    hintText: "amount",
+                    hintText: S.of(context).amount,
                     hintStyle: AppTextStyles.of(context).regular24.copyWith(
                       color: AppColors.of(context).neutralColor11,
                     ),
@@ -554,7 +555,7 @@ class _WalletPageState extends State<WalletPage> {
                     ),
                     child: Center(
                       child: Text(
-                        "Add",
+                        S.of(context).add,
                         style: AppTextStyles.of(context).bold24.copyWith(
                           color: AppColors.of(context).neutralColor1,
                         ),

@@ -3,7 +3,20 @@
     "fastFood": "Fast food",
     "happyFood": "Happy food",
     "familyFood": "Family food",
+
     "orders": "Orders",
+    "ordersNow": "ORDER NOW",
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "quantity": "Quantity:",
+    "orderSuccess": "Order placed successfully",
+    "addMoneyWallet": "Add some money to your Wallet",
+
+    "add": "Add",
+
+    "addAddress": "Add the address",
+    "address": "Address",
+
     "pending": "Pending",
     "delivered": "Delivered",
     "wallet": "Wallet",
@@ -13,6 +26,14 @@
     "added": "Added",
     "toYourWallet": "to your wallet",
     "addAmount": "Add amount",
-    "amount": "amount",
-    "add": "Add"
+    "amount": "Amount",
+
+    "paymentSuccessful": "Payment Successful",
+    "cancelled": "Cancelled",
+
+    "profile": "Profile",
+    "name": "Name:",
+    "email": "Email:",
+    "english": "English",
+    "logOut": "LogOut"
 }

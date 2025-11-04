@@ -1,3 +1,39 @@
 {
-    "searchFoodItem": "Tìm kiếm món ăn ..."
+    "searchFoodItem": "Tìm kiếm món ăn ...",
+    "fastFood": "Đồ ăn nhanh",
+    "happyFood": "Đồ ăn vặt",
+    "familyFood": "Đồ ăn gia đình",
+
+    "orders": "Orders",
+    "ordersNow": "ĐẶT HÀNG NGAY",
+    "readMore": "Đọc thêm",
+    "readLess": "Thu gọn",
+    "quantity": "Số lượng:",
+    "orderSuccess": "Đặt hàng thành công",
+    "addMoneyWallet": "Hãy nạp thêm tiền vào ví",
+
+    "add": "Thêm",
+
+    "addAddress": "Thêm địa chỉ",
+    "address": "Địa chỉ",
+
+    "pending": "Đang chờ",
+    "delivered": "Đã giao hàng",
+    "wallet": "Ví điện tử",
+    "yourWallet": "Ví của bạn",
+    "addMoney": "Nạp tiền",
+    "yourTrans": "Giao dịch của bạn",
+    "added": "Đã cộng",
+    "toYourWallet": "vào ví của bạn",
+    "addAmount": "Thêm số tiền",
+    "amount": "Số tiền",
+
+    "paymentSuccessful": "Thanh toán thành công",
+    "cancelled": "Hủy bỏ",
+
+    "profile": "Hồ sơ cá nhân",
+    "name": "Họ tên:",
+    "email": "Thư điện tử:",
+    "english": "Tiếng Việt",
+    "logOut": "Đăng xuất"
 }

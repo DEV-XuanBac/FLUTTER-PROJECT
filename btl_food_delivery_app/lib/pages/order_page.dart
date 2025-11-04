@@ -1,4 +1,5 @@
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
+import 'package:btl_food_delivery_app/l10n/l10n.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:btl_food_delivery_app/services/widget_support.dart';
@@ -184,7 +185,7 @@ class _OrderPageState extends State<OrderPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Orders",
+                  S.of(context).orders,
                   style: AppWidget.HeadlineTextFieldStyle(context),
                 ),
               ],
