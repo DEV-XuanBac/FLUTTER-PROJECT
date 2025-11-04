@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "198335809345",
+    "project_id": "mobileapp-a25af",
+    "storage_bucket": "mobileapp-a25af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:198335809345:android:545fae76abb0b211d643c0",
+        "android_client_info": {
+          "package_name": "com.example.btl_food_delivery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4AsZzOZnQhso7w5EecYEEGEHfNUemwzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

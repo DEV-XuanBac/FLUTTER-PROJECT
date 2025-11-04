@@ -1,0 +1,18 @@
+{
+    "searchFoodItem": "Search food item ...",
+    "fastFood": "Fast food",
+    "happyFood": "Happy food",
+    "familyFood": "Family food",
+    "orders": "Orders",
+    "pending": "Pending",
+    "delivered": "Delivered",
+    "wallet": "Wallet",
+    "yourWallet": "Your wallet",
+    "addMoney": "Add money",
+    "yourTrans": "Your transactions",
+    "added": "Added",
+    "toYourWallet": "to your wallet",
+    "addAmount": "Add amount",
+    "amount": "amount",
+    "add": "Add"
+}

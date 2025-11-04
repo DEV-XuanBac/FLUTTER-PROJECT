@@ -1,0 +1,4 @@
+String publishedkey =
+    "pk_test_51SMU4BAghPiZKF270p6sPgw08QofdBj86acr4oXP8m1JGohCoUbwqPn1RCqGp3NTgqomJtsPXm3AKWD9iuQF5nsf009BFMkXYg";
+String secretkey =
+    "sk_test_51SMU4BAghPiZKF27gsO5TrBXFIJbaNcrYbcmeLJFRfPeQLgcr5oR8c1D3vlwmwkidhuZUrIxFFZjm6IBgoAGakhH00iqIdjqOP";
