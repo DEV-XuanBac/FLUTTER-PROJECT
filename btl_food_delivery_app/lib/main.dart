@@ -10,6 +10,7 @@ import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -20,6 +21,7 @@ void main() async {
   Stripe.publishableKey = publishedkey;
   await Firebase.initializeApp();
   await GetStorage.init("Food Delivery");
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
