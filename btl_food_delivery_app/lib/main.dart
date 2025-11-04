@@ -18,7 +18,7 @@ import 'package:get_storage/get_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = publishedkey;
+  Stripe.publishableKey = StripeKeyConstants.publicKey;
   await Firebase.initializeApp();
   await GetStorage.init("Food Delivery");
   await dotenv.load(fileName: ".env");

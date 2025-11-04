@@ -469,7 +469,7 @@ class _WalletPageState extends State<WalletPage> {
       var res = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
         headers: {
-          'Authorization': 'Bearer $secretkey',
+          'Authorization': 'Bearer ${StripeKeyConstants.secretKey}',
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: body,
