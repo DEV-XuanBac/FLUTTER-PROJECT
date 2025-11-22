@@ -9,7 +9,11 @@ class AuthMethods {
   }
 
   Future signOut() async {
-    await FirebaseAuth.instance.signOut();
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      print("Lỗi đăng xuất: $e");
+    }
   }
 
   Future deleteUser() async {

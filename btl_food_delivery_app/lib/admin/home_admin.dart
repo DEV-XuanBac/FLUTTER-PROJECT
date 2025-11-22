@@ -25,7 +25,7 @@ class _HomeAdminState extends State<HomeAdmin> {
             child: Row(
               children: [
                 Text(
-                  "Home Admin",
+                  "Trang quản trị",
                   style: AppTextStyles.of(context).bold32.copyWith(
                     color: AppColors.of(context).neutralColor12,
                   ),
@@ -77,7 +77,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 fit: BoxFit.contain,
                               ),
                               Text(
-                                "Manage Orders",
+                                "Quản lí đơn hàng",
                                 style: AppTextStyles.of(context).bold32
                                     .copyWith(
                                       color: AppColors.of(
@@ -85,16 +85,9 @@ class _HomeAdminState extends State<HomeAdmin> {
                                       ).neutralColor12,
                                     ),
                               ),
-                              Container(
-                                padding: EdgeInsets.all(7.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.of(context).primaryColor9,
-                                  borderRadius: BorderRadius.circular(50.w),
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.of(context).neutralColor1,
-                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.of(context).primaryColor10,
                               ),
                             ],
                           ),
@@ -140,7 +133,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 ),
                               ),
                               Text(
-                                "Manage Users",
+                                "Quản lí người dùng",
                                 style: AppTextStyles.of(context).bold32
                                     .copyWith(
                                       color: AppColors.of(
@@ -148,16 +141,9 @@ class _HomeAdminState extends State<HomeAdmin> {
                                       ).neutralColor12,
                                     ),
                               ),
-                              Container(
-                                padding: EdgeInsets.all(7.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.of(context).primaryColor9,
-                                  borderRadius: BorderRadius.circular(50.w),
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.of(context).neutralColor1,
-                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.of(context).primaryColor10,
                               ),
                             ],
                           ),
@@ -203,7 +189,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 ),
                               ),
                               Text(
-                                "Manage Food List",
+                                "Quản lí sản phẩm",
                                 style: AppTextStyles.of(context).bold32
                                     .copyWith(
                                       color: AppColors.of(
@@ -211,16 +197,9 @@ class _HomeAdminState extends State<HomeAdmin> {
                                       ).neutralColor12,
                                     ),
                               ),
-                              Container(
-                                padding: EdgeInsets.all(7.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.of(context).primaryColor9,
-                                  borderRadius: BorderRadius.circular(50.w),
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.of(context).neutralColor1,
-                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.of(context).primaryColor10,
                               ),
                             ],
                           ),
@@ -266,7 +245,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 ),
                               ),
                               Text(
-                                "Manage Categories",
+                                "Quản lí danh mục",
                                 style: AppTextStyles.of(context).bold32
                                     .copyWith(
                                       color: AppColors.of(
@@ -274,16 +253,9 @@ class _HomeAdminState extends State<HomeAdmin> {
                                       ).neutralColor12,
                                     ),
                               ),
-                              Container(
-                                padding: EdgeInsets.all(7.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.of(context).primaryColor9,
-                                  borderRadius: BorderRadius.circular(50.w),
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.of(context).neutralColor1,
-                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.of(context).primaryColor10,
                               ),
                             ],
                           ),
@@ -324,7 +296,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 ),
                               ),
                               Text(
-                                "Sales Statistics",
+                                "Thống kê doanh số",
                                 style: AppTextStyles.of(context).bold32
                                     .copyWith(
                                       color: AppColors.of(
@@ -332,16 +304,9 @@ class _HomeAdminState extends State<HomeAdmin> {
                                       ).neutralColor12,
                                     ),
                               ),
-                              Container(
-                                padding: EdgeInsets.all(7.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.of(context).primaryColor9,
-                                  borderRadius: BorderRadius.circular(50.w),
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.of(context).neutralColor1,
-                                ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.of(context).primaryColor10,
                               ),
                             ],
                           ),
@@ -373,7 +338,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                           ),
                           child: Center(
                             child: Text(
-                              "Log Out",
+                              "Đăng xuất",
                               style: AppTextStyles.of(
                                 context,
                               ).bold32.copyWith(color: Colors.white),

@@ -1,9 +1,9 @@
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
+import 'package:btl_food_delivery_app/model/user_model.dart';
 import 'package:btl_food_delivery_app/pages/Auth/login_page.dart';
 import 'package:btl_food_delivery_app/pages/bottom_nav.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -35,24 +35,31 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
+      await SharedPref().clearAll();
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
             email: email.trim(),
             password: password.trim(),
           );
       String id = userCredential.user!.uid;
-      Map<String, dynamic> userInforMap = {
-        "username": nameController.text.trim(),
-        "email": emailController.text.trim(),
-        "userId": id,
-        "wallet": "0",
-        "createdAt": FieldValue.serverTimestamp(),
-      };
+
+      UserModel newUser = UserModel(
+        userId: id,
+        username: nameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: "",
+        wallet: "0",
+        imageUrl: "",
+        address: "",
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
       await SharedPref().saveUserEmail(emailController.text.trim());
       await SharedPref().saveUserName(nameController.text.trim());
       await SharedPref().saveUserId(id);
 
-      await DatabaseMethods().addUserDetails(userInforMap, id);
+      await DatabaseMethods().addUserDetails(newUser.toSignUpMap(), id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

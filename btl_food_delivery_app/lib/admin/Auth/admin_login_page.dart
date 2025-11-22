@@ -25,7 +25,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             SnackBar(
               backgroundColor: Colors.red,
               content: Text(
-                "Your username is not correct",
+                "Tên đăng nhập không chính xác",
                 style: AppTextStyles.of(context).bold24,
               ),
             ),
@@ -35,7 +35,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             SnackBar(
               backgroundColor: Colors.red,
               content: Text(
-                "Your password is not correct",
+                "Mật khẩu không chính xác",
                 style: AppTextStyles.of(context).bold24,
               ),
             ),
@@ -61,7 +61,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             height: MediaQuery.of(context).size.height / 2.7,
             padding: EdgeInsets.only(top: 30.h),
             decoration: BoxDecoration(
-              color: AppColors.of(context).primaryColor5,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.of(context).primaryColor8,
+                  AppColors.of(context).primaryColor6,
+                ],
+              ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(22.w),
                 bottomRight: Radius.circular(22.w),
@@ -71,27 +78,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               child: Image.asset(
                 "assets/logo.png",
                 height: MediaQuery.of(context).size.height / 4,
-                width: MediaQuery.of(context).size.width,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height / 2.7,
-            padding: EdgeInsets.only(top: 30.h),
-            decoration: BoxDecoration(
-              color: AppColors.of(context).primaryColor5,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(22.w),
-                bottomRight: Radius.circular(22.w),
-              ),
-            ),
-            child: Center(
-              child: Image.asset(
-                "assets/logo.png",
-                height: MediaQuery.of(context).size.height / 4,
-                width: MediaQuery.of(context).size.width,
+                width: MediaQuery.of(context).size.width / 1.6,
                 fit: BoxFit.contain,
               ),
             ),
@@ -106,7 +93,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 right: 25.w,
               ),
               child: Material(
-                elevation: 3.0,
+                elevation: 8.0,
                 borderRadius: BorderRadius.circular(20.w),
                 child: Container(
                   padding: EdgeInsets.symmetric(
@@ -122,7 +109,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     children: [
                       Center(
                         child: Text(
-                          "Admin",
+                          "Quản lý",
                           style: AppTextStyles.of(context).bold32.copyWith(
                             color: AppColors.of(context).primaryColor12,
                           ),
@@ -130,7 +117,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       ),
 
                       Text(
-                        "User name:",
+                        "Tên người dùng:",
                         style: AppTextStyles.of(context).bold24.copyWith(
                           color: AppColors.of(context).neutralColor11,
                         ),
@@ -139,12 +126,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         decoration: BoxDecoration(
                           color: AppColors.of(context).neutralColor7,
                           borderRadius: BorderRadius.circular(12.w),
+                          border: Border.all(
+                            color: AppColors.of(context).neutralColor8,
+                          ),
                         ),
                         child: TextField(
                           controller: usernameController,
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: "Enter name",
+                            hintText: "Nhập tên người dùng",
                             prefixIcon: Icon(Icons.person_outline),
                             hintStyle: AppTextStyles.of(context).regular24
                                 .copyWith(
@@ -159,7 +149,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       SizedBox(height: 10.h),
 
                       Text(
-                        "Password:",
+                        "Mật khẩu:",
                         style: AppTextStyles.of(context).bold24.copyWith(
                           color: AppColors.of(context).neutralColor11,
                         ),
@@ -168,13 +158,16 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         decoration: BoxDecoration(
                           color: AppColors.of(context).neutralColor7,
                           borderRadius: BorderRadius.circular(12.w),
+                          border: Border.all(
+                            color: AppColors.of(context).neutralColor8,
+                          ),
                         ),
                         child: TextField(
                           controller: passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: "Enter password",
+                            hintText: "Nhập mật khẩu",
                             prefixIcon: Icon(Icons.password_outlined),
                             hintStyle: AppTextStyles.of(context).regular24
                                 .copyWith(
@@ -202,10 +195,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.of(context).primaryColor9,
-                              borderRadius: BorderRadius.circular(50.w),
+                              borderRadius: BorderRadius.circular(14.w),
                             ),
                             child: Text(
-                              "Log In",
+                              "Đăng nhập",
                               style: AppTextStyles.of(context).bold32.copyWith(
                                 color: AppColors.of(context).neutralColor1,
                               ),
@@ -223,7 +216,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             );
                           },
                           child: Text(
-                            "Login with role customer",
+                            "Vai trò khách hàng",
                             style: AppTextStyles.of(context).bold20.copyWith(
                               color: AppColors.of(context).primaryColor9,
                             ),

@@ -80,14 +80,38 @@ class DatabaseMethods {
         .update({"username": name, "updatedAt": FieldValue.serverTimestamp()});
   }
 
+  // Cập nhật số điện thoại người dùng
+  Future updateUserPhone(String userId, String phone) async {
+    return await FirebaseFirestore.instance
+        .collection(FirestoreConstants.usersCollection)
+        .doc(userId)
+        .update({"phone": phone, "updatedAt": FieldValue.serverTimestamp()});
+  }
+
+  // Cập nhật địa chỉ người dùng
+  Future updateUserAddress(String userId, String address) async {
+    return await FirebaseFirestore.instance
+        .collection(FirestoreConstants.usersCollection)
+        .doc(userId)
+        .update({
+          "address": address,
+          "updatedAt": FieldValue.serverTimestamp(),
+        });
+  }
+
+  // Lấy người dùng theo Id
+  Future<DocumentSnapshot> getUserById(String id) async {
+    return await FirebaseFirestore.instance
+        .collection(FirestoreConstants.usersCollection)
+        .doc(id)
+        .get();
+  }
+
   // Lấy đơn hàng chờ xử lí admin
-  Future<Stream<QuerySnapshot>> getAdminOrders() async {
+  Future<Stream<QuerySnapshot>> getAllAdminOrders() async {
     return FirebaseFirestore.instance
         .collection(FirestoreConstants.ordersCollection)
-        .where(
-          FirestoreConstants.statusField,
-          isEqualTo: FirestoreConstants.statusPending,
-        )
+        .orderBy("createdAt", descending: true)
         .snapshots();
   }
 

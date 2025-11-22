@@ -566,6 +566,7 @@ class _WalletPageState extends State<WalletPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                SizedBox(width: 30.w),
                 Text(
                   "Nạp tiền",
                   style: AppTextStyles.of(context).bold32.copyWith(

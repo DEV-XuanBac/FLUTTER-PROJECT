@@ -279,14 +279,18 @@ class _OrderPageState extends State<OrderPage> {
                                   color: AppColors.of(context).primaryColor10,
                                 ),
                                 SizedBox(width: 5.w),
-                                Text(
-                                  address,
-                                  style: AppTextStyles.of(context).regular24
-                                      .copyWith(
-                                        color: AppColors.of(
-                                          context,
-                                        ).neutralColor12,
-                                      ),
+                                Expanded(
+                                  child: Text(
+                                    address,
+                                    style: AppTextStyles.of(context).regular24
+                                        .copyWith(
+                                          color: AppColors.of(
+                                            context,
+                                          ).neutralColor12,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),

@@ -1,10 +1,10 @@
 import 'dart:async';
-
 import 'package:btl_food_delivery_app/components/food_tile.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
 import 'package:btl_food_delivery_app/model/category_model.dart';
 import 'package:btl_food_delivery_app/model/food_model.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
+import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +22,7 @@ class _AppHomeState extends State<AppHome> {
   String isCategorySelected = "0"; // => hiển thị all food
   bool isLoading = true;
   bool isSearching = false;
+  String? imageUrl;
 
   TextEditingController searchController = TextEditingController();
   FocusNode searchNode = FocusNode();
@@ -34,6 +35,7 @@ class _AppHomeState extends State<AppHome> {
     super.initState();
     loadCategories();
     loadFoods();
+    loadUserImage();
 
     searchController.addListener(() {
       if (searchController.text.isEmpty) {
@@ -49,6 +51,19 @@ class _AppHomeState extends State<AppHome> {
     _categoriesSub?.cancel();
     _foodsSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> loadUserImage() async {
+    try {
+      String? userImg = await SharedPref().getUserImage();
+      if (mounted) {
+        setState(() {
+          imageUrl = userImg;
+        });
+      }
+    } catch (e) {
+      print("Lỗi load ảnht: $e");
+    }
   }
 
   Future<void> loadCategories() async {
@@ -160,10 +175,10 @@ class _AppHomeState extends State<AppHome> {
   }
 
   void performSearch() {
+    applySearch();
     setState(() {
       isSearching = searchController.text.isNotEmpty;
     });
-    applySearch();
   }
 
   void clearSearch() {
@@ -335,40 +350,60 @@ class _AppHomeState extends State<AppHome> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset("assets/logo.png", width: 70.w, fit: BoxFit.contain),
-          SizedBox(width: 15.w),
-          Icon(Icons.location_on_outlined, size: 20.w, color: Colors.red),
-          SizedBox(width: 5.w),
+          SizedBox(width: 10.w),
           Flexible(
             child: Text(
-              "Hà Nội, Việt Nam",
+              "Hôm nay bạn muốn ăn gì?",
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.of(
                 context,
               ).bold24.copyWith(color: AppColors.of(context).neutralColor11),
             ),
           ),
-          SizedBox(width: 5.w),
-          Icon(
-            Icons.keyboard_arrow_down_outlined,
-            size: 20.w,
-            color: Colors.grey,
-          ),
         ],
       ),
       actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 10.w),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.w),
-            child: Container(
-              padding: EdgeInsets.all(6.w),
-              child: Image.asset(
-                "assets/profilez.png",
-                height: 40.w,
-                width: 40.w,
-                fit: BoxFit.fill,
-              ),
+        Container(
+          padding: EdgeInsets.all(4.w),
+          margin: EdgeInsets.only(right: 10.w),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: AppColors.of(context).primaryColor9,
+              width: 1.5,
             ),
+            borderRadius: BorderRadius.circular(50.w),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(50.w),
+            child: (imageUrl != null && imageUrl!.isNotEmpty)
+                ? Image.network(
+                    imageUrl!,
+                    height: 48.w,
+                    width: 48.w,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        "assets/profilez.png",
+                        height: 48.w,
+                        width: 48.w,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.of(context).primaryColor10,
+                        ),
+                      );
+                    },
+                  )
+                : Image.asset(
+                    "assets/profilez.png",
+                    height: 48.w,
+                    width: 48.w,
+                    fit: BoxFit.cover,
+                  ),
           ),
         ),
       ],
