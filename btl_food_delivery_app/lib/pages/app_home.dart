@@ -1,14 +1,10 @@
+import 'dart:async';
+
+import 'package:btl_food_delivery_app/components/food_tile.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
-import 'package:btl_food_delivery_app/l10n/l10n.dart';
 import 'package:btl_food_delivery_app/model/category_model.dart';
-import 'package:btl_food_delivery_app/model/fastfood_model.dart';
-import 'package:btl_food_delivery_app/model/happyfood_model.dart';
-import 'package:btl_food_delivery_app/pages/detail_page.dart';
-import 'package:btl_food_delivery_app/services/category_data.dart';
+import 'package:btl_food_delivery_app/model/food_model.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
-import 'package:btl_food_delivery_app/services/fastfood_data.dart';
-import 'package:btl_food_delivery_app/services/happyfood_data.dart';
-import 'package:btl_food_delivery_app/services/widget_support.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,56 +17,170 @@ class AppHome extends StatefulWidget {
 
 class _AppHomeState extends State<AppHome> {
   List<CategoryModel> categories = [];
-  List<FastfoodModel> foods = [];
-  List<HappyfoodModel> happys = [];
-  String track = "0";
-  bool search = false;
+  List<FoodModel> allFoods = [];
+  List<FoodModel> displayFoods = [];
+  String isCategorySelected = "0"; // => hiển thị all food
+  bool isLoading = true;
+  bool isSearching = false;
 
-  TextEditingController searchController = new TextEditingController();
+  TextEditingController searchController = TextEditingController();
+  FocusNode searchNode = FocusNode();
+
+  StreamSubscription? _categoriesSub;
+  StreamSubscription? _foodsSub;
 
   @override
   void initState() {
-    foods = getFastFood();
-    happys = getHappyFood();
     super.initState();
+    loadCategories();
+    loadFoods();
+
+    searchController.addListener(() {
+      if (searchController.text.isEmpty) {
+        performSearch();
+      }
+    });
   }
 
-  var queryResult = [];
-  var tempSearchStore = [];
+  @override
+  void dispose() {
+    searchController.dispose();
+    searchNode.dispose();
+    _categoriesSub?.cancel();
+    _foodsSub?.cancel();
+    super.dispose();
+  }
 
-  initiateSearch(value) {
-    if (value.length == 0) {
-      setState(() {
-        queryResult = [];
-        tempSearchStore = [];
-      });
-    }
-    setState(() {
-      search = true;
-    });
+  Future<void> loadCategories() async {
+    try {
+      final stream = await DatabaseMethods().getAllCategories();
+      _categoriesSub = stream.listen((QuerySnapshot snapshot) {
+        List<CategoryModel> loadedCategories = snapshot.docs.map((doc) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          return CategoryModel(
+            categoryId: doc.id,
+            categoryName: data["categoryName"] ?? "",
+            categoryImage: data["categoryImage"] ?? "",
+          );
+        }).toList();
 
-    var textSearch = value.subString(0, 1).toUpperCase() + value.subString(1);
-    if (queryResult.isEmpty && value.length == 1) {
-      DatabaseMethods().search(value).then((QuerySnapshot snapshot) {
-        for (int i = 0; i < snapshot.docs.length; i++) {
-          queryResult.add(snapshot.docs[i].data());
-        }
-      });
-    } else {
-      tempSearchStore = [];
-      queryResult.forEach((element) {
-        if (element['name'].startsWith(textSearch)) {
+        if (mounted) {
           setState(() {
-            tempSearchStore.add(element);
+            categories = loadedCategories;
           });
         }
       });
+    } catch (e) {
+      print("Lỗi tải categories: $e");
     }
+  }
+
+  Future<void> loadFoods() async {
+    try {
+      final stream = await DatabaseMethods().getListFood();
+      _foodsSub = stream.listen((QuerySnapshot snapshot) {
+        List<FoodModel> loadedFoods = snapshot.docs.map((doc) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          return FoodModel(
+            id: doc.id,
+            name: data["name"] ?? "",
+            image: data["image"] ?? "",
+            price: (data["price"] as num?)?.toDouble() ?? 0.0,
+            categoryId: data["categoryId"] ?? "",
+            description: data["description"] ?? "",
+            item: data["item"] ?? "",
+            kcal: data["kcal"] ?? "",
+            isAvailable: data["isAvailable"] ?? true,
+            searchKey: data["searchKey"] ?? "",
+          );
+        }).toList();
+
+        loadedFoods = loadedFoods
+            .where((food) => food.isAvailable == true)
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            allFoods = loadedFoods;
+            displayFoods = loadedFoods; // Default hiển thị all
+            isLoading = false;
+          });
+        }
+      });
+    } catch (e) {
+      print("Lỗi tải dữ liệu sản phẩm: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void applySearch() {
+    List<FoodModel> currentList = (isCategorySelected == "0")
+        ? allFoods
+        : allFoods
+              .where((food) => food.categoryId == isCategorySelected)
+              .toList();
+    if (searchController.text.isEmpty) {
+      setState(() {
+        displayFoods = currentList;
+        isSearching = false;
+      });
+    } else {
+      setState(() {
+        displayFoods = currentList.where((food) {
+          return food.name!.toLowerCase().contains(
+                searchController.text.toLowerCase(),
+              ) ||
+              (food.searchKey?.toLowerCase().contains(
+                    searchController.text.toLowerCase(),
+                  ) ??
+                  false);
+        }).toList();
+        isSearching = true;
+      });
+    }
+  }
+
+  void filterByCategories(String categoryId) {
+    setState(() {
+      isCategorySelected = categoryId;
+      if (categoryId == "0") {
+        displayFoods = allFoods;
+      } else {
+        displayFoods = allFoods.where((food) {
+          return food.categoryId == categoryId;
+        }).toList();
+      }
+
+      if (searchController.text.isNotEmpty) {
+        applySearch();
+      }
+    });
+  }
+
+  void performSearch() {
+    setState(() {
+      isSearching = searchController.text.isNotEmpty;
+    });
+    applySearch();
+  }
+
+  void clearSearch() {
+    searchController.clear();
+    searchNode.unfocus();
+    setState(() {
+      isSearching = false;
+    });
+    filterByCategories(isCategorySelected);
+  }
+
+  void onSearchSubmit(String value) {
+    performSearch();
   }
 
   @override
   Widget build(BuildContext context) {
-    categories = getCategories(context);
     return Scaffold(
       appBar: appBar(),
       backgroundColor: AppColors.of(context).primaryColor2,
@@ -89,98 +199,127 @@ class _AppHomeState extends State<AppHome> {
                   decoration: BoxDecoration(
                     color: AppColors.of(context).neutralColor6,
                     borderRadius: BorderRadius.circular(10.w),
+                    border: Border.all(
+                      color: isSearching
+                          ? AppColors.of(context).primaryColor9
+                          : AppColors.of(context).neutralColor8,
+                      width: 1.w,
+                    ),
                   ),
                   child: TextField(
                     controller: searchController,
-                    // onChanged: (value) {
-                    //   initiateSearch(value.toUpperCase());
-                    // },
-                    // tạo bảng food xong làm tiếp
+                    focusNode: searchNode,
+                    onSubmitted: onSearchSubmit,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: S.of(context).searchFoodItem,
+                      hintText: "Tìm kiếm món ăn...",
                       hintStyle: AppTextStyles.of(context).regular20.copyWith(
                         color: AppColors.of(context).neutralColor9,
                       ),
+                    ),
+                    style: AppTextStyles.of(context).regular20.copyWith(
+                      color: AppColors.of(context).neutralColor11,
                     ),
                   ),
                 ),
               ),
 
               // Button search
-              Container(
-                margin: EdgeInsets.only(right: 10.w),
-                padding: EdgeInsets.all(9.w),
-                decoration: BoxDecoration(
-                  color: AppColors.of(context).primaryColor9,
-                  borderRadius: BorderRadius.circular(8.w),
+              GestureDetector(
+                onTap: () {
+                  FocusScope.of(
+                    context,
+                  ).unfocus(); // Ẩn bàn phím khi ấn nút tìm kiếm
+                  performSearch();
+                },
+                child: Container(
+                  margin: EdgeInsets.only(right: 10.w),
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.of(context).primaryColor9,
+                    borderRadius: BorderRadius.circular(12.w),
+                  ),
+                  child: Icon(
+                    Icons.search,
+                    size: 30.w,
+                    color: AppColors.of(context).neutralColor1,
+                  ),
                 ),
-                child: Icon(Icons.search, color: Colors.white),
               ),
             ],
           ),
 
           SizedBox(height: 10.h),
-          // Category
+
+          // Category section
           Container(
             height: 45.h,
             margin: EdgeInsets.only(left: 10.w),
             child: ListView.builder(
               shrinkWrap: true,
               scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
+              itemCount: categories.length + 1,
               itemBuilder: (context, index) {
-                return CategoryTile(
-                  categories[index].name!,
-                  categories[index].image!,
-                  index.toString(),
-                );
+                if (index == 0) {
+                  return CategoryTile(
+                    categoryName: "Tất cả",
+                    icon: Icons.all_inclusive,
+                    categoryId: "0",
+                    isSelected: isCategorySelected == "0",
+                    onTap: filterByCategories,
+                  ); // default
+                } else {
+                  final category = categories[index - 1];
+                  return CategoryTile(
+                    categoryName: category.categoryName!,
+                    imageUrl: category.categoryImage,
+                    categoryId: category.categoryId!,
+                    isSelected: isCategorySelected == category.categoryId,
+                    onTap: filterByCategories,
+                  );
+                }
               },
             ),
           ),
 
+          if (isSearching && searchController.text.isNotEmpty)
+            Container(
+              margin: EdgeInsets.only(top: 10.h, left: 10.w, right: 10.w),
+              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: AppColors.of(context).primaryColor4,
+                borderRadius: BorderRadius.circular(10.w),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Kết quả tìm kiếm cho '${searchController.text}' (${displayFoods.length} kết quả)",
+                    style: AppTextStyles.of(context).regular16.copyWith(
+                      color: AppColors.of(context).neutralColor11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  GestureDetector(
+                    onTap: clearSearch,
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 24.w,
+                      color: AppColors.of(context).primaryColor11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           SizedBox(height: 10.h),
-          track == "0"
-              ? Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.all(10.w),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.74,
-                      mainAxisSpacing: 15.0,
-                      crossAxisSpacing: 10.0,
-                    ),
-                    itemCount: foods.length,
-                    itemBuilder: (context, index) {
-                      return FoodTile(
-                        foods[index].name!,
-                        foods[index].image!,
-                        foods[index].price!,
-                      );
-                    },
-                  ),
-                )
-              : track == "1"
-              ? Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.all(10.w),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.74,
-                      mainAxisSpacing: 15.0,
-                      crossAxisSpacing: 10.0,
-                    ),
-                    itemCount: happys.length,
-                    itemBuilder: (context, index) {
-                      return FoodTile(
-                        happys[index].name!,
-                        happys[index].image!,
-                        happys[index].price!,
-                      );
-                    },
-                  ),
-                )
-              : Container(),
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : (displayFoods.isEmpty ? buildEmptyState() : buildFoodGrid()),
+          ),
         ],
       ),
     );
@@ -236,118 +375,147 @@ class _AppHomeState extends State<AppHome> {
     );
   }
 
-  Widget CategoryTile(String name, String image, String categoryIdx) {
+  Widget CategoryTile({
+    required String categoryName,
+    required String categoryId,
+    String? imageUrl,
+    IconData? icon,
+    required bool isSelected,
+    required Function(String) onTap,
+  }) {
     return GestureDetector(
-      onTap: () {
-        track = categoryIdx.toString();
-        setState(() {});
-      },
-      child: track == categoryIdx
-          ? Container(
-              margin: EdgeInsets.only(right: 20.w),
-              child: Material(
-                elevation: 3.0,
-                borderRadius: BorderRadius.circular(20.w),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.of(context).primaryColor9,
-                    borderRadius: BorderRadius.circular(18.w),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        image,
-                        height: 35.w,
-                        width: 35.w,
-                        fit: BoxFit.cover,
-                      ),
-                      SizedBox(width: 10.w),
-                      Text(name, style: AppWidget.whiteTextFieldStyle(context)),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          : Container(
-              margin: EdgeInsets.only(right: 20.w),
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              decoration: BoxDecoration(
-                color: AppColors.of(context).neutralColor8,
-                borderRadius: BorderRadius.circular(18.w),
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    image,
-                    height: 35.w,
-                    width: 35.w,
+      onTap: () => onTap(categoryId),
+      child: Container(
+        margin: EdgeInsets.only(right: 10.w),
+        padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.of(context).primaryColor9
+              : AppColors.of(context).neutralColor6,
+          borderRadius: BorderRadius.circular(12.w),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.of(context).primaryColor9
+                : AppColors.of(context).neutralColor8,
+            width: 1.w,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null)
+              Icon(
+                icon,
+                size: 20.w,
+                color: isSelected
+                    ? AppColors.of(context).neutralColor1
+                    : AppColors.of(context).neutralColor12,
+              )
+            else if (imageUrl != null)
+              Container(
+                width: 25.w,
+                height: 25.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: NetworkImage(imageUrl),
                     fit: BoxFit.cover,
                   ),
-                  SizedBox(width: 10.w),
-                  Text(name, style: AppWidget.blackTextFieldStyle(context)),
-                ],
+                ),
+              )
+            else
+              Icon(
+                Icons.category,
+                size: 20.w,
+                color: isSelected
+                    ? AppColors.of(context).neutralColor1
+                    : AppColors.of(context).neutralColor12,
               ),
+            SizedBox(width: 10.w),
+            Text(
+              categoryName,
+              style: isSelected
+                  ? AppTextStyles.of(context).bold20.copyWith(
+                      color: AppColors.of(context).neutralColor1,
+                    )
+                  : AppTextStyles.of(context).regular20.copyWith(
+                      color: AppColors.of(context).neutralColor12,
+                    ),
             ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget FoodTile(String name, String image, String price) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.of(context).neutralColor9),
-        borderRadius: BorderRadius.circular(20.w),
-      ),
+  Widget buildEmptyState() {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(image, height: 100.w, width: 100.w, fit: BoxFit.contain),
+          Icon(
+            Icons.fastfood_outlined,
+            size: 80.w,
+            color: AppColors.of(context).neutralColor9,
+          ),
+          SizedBox(height: 12.h),
           Text(
-            name,
+            searchController.text.isNotEmpty
+                ? "Không tìm thấy sản phẩm phù hợp"
+                : "Không có sản phẩm trong danh mục này",
             style: AppTextStyles.of(
               context,
-            ).bold32.copyWith(color: AppColors.of(context).neutralColor12),
+            ).bold24.copyWith(color: AppColors.of(context).neutralColor11),
+            textAlign: TextAlign.center,
           ),
+          SizedBox(height: 10.h),
           Text(
-            "\$ $price",
+            isSearching
+                ? "Hãy tìm kiếm với sản phẩm khác"
+                : "Vui lòng chọn danh mục khác",
             style: AppTextStyles.of(
               context,
-            ).bold24.copyWith(color: AppColors.of(context).primaryColor10),
+            ).regular24.copyWith(color: AppColors.of(context).neutralColor10),
+            textAlign: TextAlign.center,
           ),
-          Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DetailPage(image: image, name: name, price: price),
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 42.h,
-                  width: 70.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.of(context).primaryColor10,
-                    borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(20.w),
-                      topLeft: Radius.circular(20.w),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    size: 24.sp,
-                    color: AppColors.of(context).neutralColor1,
-                  ),
+          SizedBox(height: 20.h),
+          if (isSearching || searchController.text.isNotEmpty)
+            ElevatedButton(
+              onPressed: clearSearch,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.of(context).primaryColor9,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.w),
                 ),
               ),
-            ],
-          ),
+              child: Text(
+                "Xóa tìm kiếm",
+                style: AppTextStyles.of(context).regular20.copyWith(
+                  color: AppColors.of(context).neutralColor1,
+                ),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget buildFoodGrid() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      child: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.7,
+          mainAxisSpacing: 15.w,
+          crossAxisSpacing: 15.w,
+        ),
+        itemCount: displayFoods.length,
+        itemBuilder: (context, index) {
+          final food = displayFoods[index];
+          return FoodTile(food: food);
+        },
       ),
     );
   }

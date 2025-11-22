@@ -1,4 +1,5 @@
 import 'package:btl_food_delivery_app/admin/home_admin.dart';
+import 'package:btl_food_delivery_app/pages/Auth/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,12 +14,12 @@ class AdminLoginPage extends StatefulWidget {
 }
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
-  TextEditingController usernameController = new TextEditingController();
-  TextEditingController passwordController = new TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   loginAdmin() {
     FirebaseFirestore.instance.collection("admin").get().then((value) {
-      value.docs.forEach((result) {
+      for (var result in value.docs) {
         if (result.data()['username'] != usernameController.text.trim()) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -45,7 +46,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             MaterialPageRoute(builder: (_) => HomeAdmin()),
           );
         }
-      });
+      }
     });
   }
 
@@ -204,10 +205,27 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                               borderRadius: BorderRadius.circular(50.w),
                             ),
                             child: Text(
-                              "LogIn",
+                              "Log In",
                               style: AppTextStyles.of(context).bold32.copyWith(
                                 color: AppColors.of(context).neutralColor1,
                               ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15.h),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => LoginPage()),
+                            );
+                          },
+                          child: Text(
+                            "Login with role customer",
+                            style: AppTextStyles.of(context).bold20.copyWith(
+                              color: AppColors.of(context).primaryColor9,
                             ),
                           ),
                         ),

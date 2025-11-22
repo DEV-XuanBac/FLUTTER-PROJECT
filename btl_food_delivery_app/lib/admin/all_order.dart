@@ -12,11 +12,28 @@ class AllOrder extends StatefulWidget {
 }
 
 class _AllOrderState extends State<AllOrder> {
-  Stream? orderStream;
+  Stream<QuerySnapshot>? orderStream;
+  bool isLoading = true;
+  String error = "";
 
   getInTheLoad() async {
-    orderStream = await DatabaseMethods().getAdminOrders();
-    setState(() {});
+    try {
+      setState(() {
+        isLoading = true;
+        error = "";
+      });
+
+      orderStream = await DatabaseMethods().getAdminOrders();
+      setState(() {});
+    } catch (e) {
+      setState(() {
+        error = "Lỗi tải đơn hàng $e";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -25,229 +42,399 @@ class _AllOrderState extends State<AllOrder> {
     super.initState();
   }
 
+  Future<void> updateOrderStatus(String orderId, String userId) async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      print("update: $orderId user: $userId");
+
+      await DatabaseMethods().updateAdminOrder(orderId);
+      await DatabaseMethods().updateUserOrder(userId, orderId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đã cập nhật trạng thái đơn hàng',
+            style: AppTextStyles.of(
+              context,
+            ).regular20.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Refresh danh sách
+      getInTheLoad();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lỗi cập nhật đơn hàng: $e',
+            style: AppTextStyles.of(
+              context,
+            ).regular20.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Color statusColor(String status, BuildContext context) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return AppColors.of(context).primaryColor10;
+      case "delivered":
+        return Colors.green;
+      default:
+        return AppColors.of(context).neutralColor10;
+    }
+  }
+
+  String statusText(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "Đang chờ";
+      case "delivered":
+        return "Đã giao";
+      default:
+        return status;
+    }
+  }
+
   Widget allOrder() {
-    return StreamBuilder(
+    if (isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: AppColors.of(context).primaryColor10,
+        ),
+      );
+    }
+
+    if (error.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 50.w, color: Colors.red),
+            SizedBox(height: 10.h),
+            Text(
+              error,
+              style: AppTextStyles.of(
+                context,
+              ).regular24.copyWith(color: AppColors.of(context).neutralColor10),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
+            ElevatedButton(
+              onPressed: getInTheLoad,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.of(context).primaryColor9,
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.w),
+                ),
+                elevation: 2,
+              ),
+              child: Text(
+                'Thử lại',
+                style: AppTextStyles.of(context).regular24.copyWith(
+                  color: AppColors.of(context).neutralColor1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
       stream: orderStream,
-      builder: (context, AsyncSnapshot snapshot) {
-        return snapshot.hasData
-            ? ListView.builder(
-                padding: EdgeInsets.zero,
-                itemCount: snapshot.data.docs.length,
-                itemBuilder: (context, index) {
-                  DocumentSnapshot ds = snapshot.data.docs[index];
-                  return Container(
-                    margin: EdgeInsets.only(top: 20.h, left: 10.w, right: 10.w),
-                    child: Material(
-                      elevation: 3.0,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(14.w),
-                        topRight: Radius.circular(14.w),
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 15.w,
-                          vertical: 5.h,
-                        ),
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                          color: AppColors.of(context).neutralColor1,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(14.w),
-                            topRight: Radius.circular(14.w),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: AppColors.of(context).primaryColor10,
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Xảy ra lỗi: ${snapshot.error}",
+              style: AppTextStyles.of(
+                context,
+              ).regular24.copyWith(color: AppColors.of(context).neutralColor11),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  size: 80.w,
+                  color: AppColors.of(context).neutralColor10,
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'Không có đơn hàng nào',
+                  style: AppTextStyles.of(context).bold24.copyWith(
+                    color: AppColors.of(context).neutralColor11,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: snapshot.data!.docs.length,
+          itemBuilder: (context, index) {
+            DocumentSnapshot ds = snapshot.data!.docs[index];
+            Map<String, dynamic> data = ds.data() as Map<String, dynamic>;
+
+            final status = data["status"] ?? "Pending";
+            final shouldShowButton = (status == "Pending");
+            final userId = data["id"] ?? "";
+
+            print("Order ${index + 1}:");
+            print("  - ID: ${ds.id}");
+            print("  - Status: $status");
+            print("  - User ID: $userId");
+            print("  - Should show button: $shouldShowButton");
+
+            return Container(
+              margin: EdgeInsets.only(top: 20.h, left: 10.w, right: 10.w),
+              child: Material(
+                elevation: 3.0,
+                borderRadius: BorderRadius.circular(14.w),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 15.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.of(context).neutralColor1,
+                    borderRadius: BorderRadius.circular(14.w),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 24.w,
+                            color: AppColors.of(context).primaryColor10,
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                          SizedBox(width: 5.w),
+                          Expanded(
+                            child: Text(
+                              data["address"] ?? "Chưa rõ",
+                              style: AppTextStyles.of(context).bold24.copyWith(
+                                color: AppColors.of(context).neutralColor12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Divider(color: AppColors.of(context).neutralColor9),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 80.w,
+                            height: 80.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.w),
+                              image: DecorationImage(
+                                image: NetworkImage(data["foodImage"] ?? ""),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 20.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  color: AppColors.of(context).primaryColor10,
-                                ),
-                                SizedBox(width: 5.w),
                                 Text(
-                                  ds["address"],
-                                  style: AppTextStyles.of(context).bold32
+                                  data["foodName"] ?? "Chưa rõ",
+                                  style: AppTextStyles.of(context).bold24
                                       .copyWith(
                                         color: AppColors.of(
                                           context,
                                         ).neutralColor12,
                                       ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
-                            Divider(
-                              color: AppColors.of(context).neutralColor12,
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Image.asset(
-                                  ds["food_image"],
-                                  height: 85.h,
-                                  width: 85.w,
-                                  fit: BoxFit.cover,
-                                ),
-                                SizedBox(width: 30.w),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                Row(
                                   children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.production_quantity_limits,
+                                          size: 16.w,
+                                          color: AppColors.of(
+                                            context,
+                                          ).primaryColor10,
+                                        ),
+                                        SizedBox(width: 6.w),
+                                        Text(
+                                          data["quantity"] ?? "0",
+                                          style: AppTextStyles.of(context)
+                                              .regular20
+                                              .copyWith(
+                                                color: AppColors.of(
+                                                  context,
+                                                ).neutralColor10,
+                                              ),
+                                        ),
+                                        SizedBox(width: 20.w),
+                                        Icon(
+                                          Icons.monetization_on,
+                                          size: 16.w,
+                                          color: AppColors.of(
+                                            context,
+                                          ).primaryColor10,
+                                        ),
+                                        SizedBox(width: 6.w),
+                                        Text(
+                                          "\$ ${data["total"] ?? "0"}",
+                                          style: AppTextStyles.of(context)
+                                              .regular20
+                                              .copyWith(
+                                                color: AppColors.of(
+                                                  context,
+                                                ).primaryColor9,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      size: 18.w,
+                                      color: AppColors.of(
+                                        context,
+                                      ).primaryColor9,
+                                    ),
+                                    SizedBox(width: 6.w),
                                     Text(
-                                      ds["food_name"],
-                                      style: AppTextStyles.of(context).bold32
+                                      data["username"] ??
+                                          "Không có tên người nhận",
+                                      style: AppTextStyles.of(context).regular24
                                           .copyWith(
                                             color: AppColors.of(
                                               context,
                                             ).neutralColor12,
                                           ),
                                     ),
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.production_quantity_limits,
-                                              size: 16.w,
-                                              color: AppColors.of(
-                                                context,
-                                              ).primaryColor10,
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            Text(
-                                              ds["quantity"],
-                                              style: AppTextStyles.of(
-                                                context,
-                                              ).bold16,
-                                            ),
-                                            SizedBox(width: 30.w),
-                                            Icon(
-                                              Icons.monetization_on,
-                                              size: 16.w,
-                                              color: AppColors.of(
-                                                context,
-                                              ).primaryColor10,
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            Text(
-                                              "\$ ${ds["total"]}",
-                                              style: AppTextStyles.of(
-                                                context,
-                                              ).bold16,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                  ],
+                                ),
+
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.email,
+                                      size: 18.w,
+                                      color: AppColors.of(
+                                        context,
+                                      ).primaryColor9,
                                     ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.person,
-                                          size: 18.w,
-                                          color: AppColors.of(
-                                            context,
-                                          ).primaryColor9,
-                                        ),
-                                        SizedBox(width: 6.w),
-                                        Text(
-                                          ds["name"],
-                                          style: AppTextStyles.of(context)
-                                              .regular24
-                                              .copyWith(
-                                                color: AppColors.of(
-                                                  context,
-                                                ).neutralColor12,
-                                              ),
-                                        ),
-                                      ],
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      data["email"] ?? "Không có email",
+                                      style: AppTextStyles.of(context).regular24
+                                          .copyWith(
+                                            color: AppColors.of(
+                                              context,
+                                            ).neutralColor11,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${statusText(data["status"])}!",
+                                      style: AppTextStyles.of(context).bold24
+                                          .copyWith(
+                                            color: statusColor(
+                                              data["status"],
+                                              context,
+                                            ),
+                                          ),
                                     ),
 
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.email,
-                                          size: 18.w,
-                                          color: AppColors.of(
-                                            context,
-                                          ).primaryColor9,
-                                        ),
-                                        SizedBox(width: 6.w),
-                                        Text(
-                                          ds["email"],
-                                          style: AppTextStyles.of(context)
-                                              .regular24
-                                              .copyWith(
-                                                color: AppColors.of(
-                                                  context,
-                                                ).neutralColor11,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          ds["status"] + "!",
-                                          style: AppTextStyles.of(context)
-                                              .bold24
-                                              .copyWith(
-                                                color: AppColors.of(
-                                                  context,
-                                                ).primaryColor10,
-                                              ),
-                                        ),
-                                        SizedBox(width: 20.w),
-
-                                        GestureDetector(
-                                          onTap: () async {
-                                            await DatabaseMethods()
-                                                .updateAdminOrder(ds.id);
-                                            await DatabaseMethods()
-                                                .updateUserOrder(
-                                                  ds["id"],
-                                                  ds.id,
-                                                );
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 20.w,
-                                              vertical: 4.w,
+                                    if (shouldShowButton)
+                                      GestureDetector(
+                                        onTap: () =>
+                                            updateOrderStatus(ds.id, userId),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 20.w,
+                                            vertical: 4.w,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.of(
+                                              context,
+                                            ).primaryColor9,
+                                            borderRadius: BorderRadius.circular(
+                                              10.w,
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.of(
-                                                context,
-                                              ).primaryColor9,
-                                              borderRadius:
-                                                  BorderRadius.circular(10.w),
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                "Delivered",
-                                                style: AppTextStyles.of(context)
-                                                    .bold24
-                                                    .copyWith(
-                                                      color: AppColors.of(
-                                                        context,
-                                                      ).neutralColor1,
-                                                    ),
-                                              ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "Đã giao",
+                                              style: AppTextStyles.of(context)
+                                                  .bold24
+                                                  .copyWith(
+                                                    color: AppColors.of(
+                                                      context,
+                                                    ).neutralColor1,
+                                                  ),
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
                                   ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  );
-                },
-              )
-            : Container();
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -257,8 +444,14 @@ class _AllOrderState extends State<AllOrder> {
     return Scaffold(
       body: Column(
         children: [
+          // AppBar
           Padding(
-            padding: EdgeInsets.only(top: 45.h, left: 12.w, right: 12.w),
+            padding: EdgeInsets.only(
+              top: 45.h,
+              left: 12.w,
+              right: 12.w,
+              bottom: 10.h,
+            ),
             child: Row(
               children: [
                 GestureDetector(
@@ -274,20 +467,33 @@ class _AllOrderState extends State<AllOrder> {
                     child: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: AppColors.of(context).neutralColor1,
+                      size: 24.w,
                     ),
                   ),
                 ),
-                SizedBox(width: 88.w),
-                Text(
-                  "All orders",
-                  style: AppTextStyles.of(context).bold32.copyWith(
-                    color: AppColors.of(context).neutralColor12,
+                SizedBox(width: 54.w),
+                Expanded(
+                  child: Text(
+                    "Tất cả đơn hàng",
+                    style: AppTextStyles.of(context).bold32.copyWith(
+                      color: AppColors.of(context).neutralColor12,
+                    ),
                   ),
                 ),
+                if (isLoading)
+                  SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.w,
+                      color: AppColors.of(context).primaryColor10,
+                    ),
+                  ),
               ],
             ),
           ),
 
+          // Display list
           Expanded(
             child: Container(
               width: MediaQuery.of(context).size.width,
@@ -300,7 +506,7 @@ class _AllOrderState extends State<AllOrder> {
               ),
               child: Column(
                 children: [
-                  Container(
+                  SizedBox(
                     height: MediaQuery.of(context).size.height / 1.2,
                     child: allOrder(),
                   ),

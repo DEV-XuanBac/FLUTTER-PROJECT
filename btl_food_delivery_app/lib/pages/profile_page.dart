@@ -1,12 +1,15 @@
+import 'dart:io';
+
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
-import 'package:btl_food_delivery_app/l10n/l10n.dart';
-import 'package:btl_food_delivery_app/main.dart';
 import 'package:btl_food_delivery_app/pages/onboarding.dart';
 import 'package:btl_food_delivery_app/services/auth_methods.dart';
+import 'package:btl_food_delivery_app/services/cloudinary_services.dart';
+import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
-import 'package:btl_food_delivery_app/services/widget_support.dart';
+import 'package:btl_food_delivery_app/components/widget_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,12 +19,26 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String? email, name;
+  String? email, name, imageUrl;
+  final TextEditingController nameController = TextEditingController();
+  bool isEditName = false;
+  bool isLoading = false;
+  bool initialLoading = true;
+  File? imageFile;
 
   getTheSharedPref() async {
-    name = await SharedPref().getUsername();
-    email = await SharedPref().getUserEmail();
-    setState(() {});
+    try {
+      name = await SharedPref().getUsername();
+      email = await SharedPref().getUserEmail();
+      imageUrl = await SharedPref().getUserImage();
+      nameController.text = name ?? "";
+    } catch (e) {
+      print("Error loading: $e");
+    } finally {
+      setState(() {
+        initialLoading = false;
+      });
+    }
   }
 
   @override
@@ -31,9 +48,161 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        imageFile = File(image.path);
+        isLoading = true;
+      });
+
+      try {
+        String? uploadUrl = await CloudinaryServices.uploadImage(imageFile!);
+
+        if (uploadUrl == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Lỗi tải ảnh lên Cloudinary",
+                style: AppTextStyles.of(
+                  context,
+                ).regular20.copyWith(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        await SharedPref().saveUserImage(uploadUrl);
+
+        String userId = await SharedPref().getUserId() ?? "";
+        if (userId.isNotEmpty) {
+          await DatabaseMethods().updateUserProfileImg(userId, uploadUrl);
+        }
+
+        setState(() {
+          imageUrl = uploadUrl;
+          imageFile = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Cập nhật ảnh đại diện thành công",
+              style: AppTextStyles.of(
+                context,
+              ).regular20.copyWith(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Lỗi khi tải ảnh lên: $e',
+              style: AppTextStyles.of(
+                context,
+              ).regular20.copyWith(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> updateName() async {
+    if (nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Không để trống họ tên',
+            style: AppTextStyles.of(
+              context,
+            ).regular20.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      String newName = nameController.text.trim();
+
+      await SharedPref().saveUserName(newName);
+
+      String userId = await SharedPref().getUserId() ?? "";
+      if (userId.isNotEmpty) {
+        await DatabaseMethods().updateUserName(userId, newName);
+      }
+
+      setState(() {
+        name = newName;
+        isEditName = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Cập nhật tên người dùng thành công",
+            style: AppTextStyles.of(
+              context,
+            ).regular20.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lỗi khi tải ảnh lên: $e',
+            style: AppTextStyles.of(
+              context,
+            ).regular20.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void toggleTheme() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Tính năng đang được phát triển'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: (name == null || email == null)
+      body: (isLoading && name == null && email == null)
           ? Center(child: CircularProgressIndicator())
           : Container(
               margin: EdgeInsets.only(top: 40.h),
@@ -41,7 +210,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Center(
                     child: Text(
-                      S.of(context).profile,
+                      "Hồ sơ cá nhân",
                       style: AppWidget.HeadlineTextFieldStyle(context),
                     ),
                   ),
@@ -50,7 +219,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Container(
                       width: MediaQuery.of(context).size.width,
                       decoration: BoxDecoration(
-                        color: AppColors.of(context).neutralColor7,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.of(context).neutralColor8,
+                            AppColors.of(context).neutralColor1,
+                          ],
+                        ),
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20.w),
                           topRight: Radius.circular(20.w),
@@ -60,15 +236,89 @@ class _ProfilePageState extends State<ProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           SizedBox(height: 50.h),
-                          Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50.w),
-                              child: Image.asset(
-                                "assets/profilez.png",
-                                width: 100.w,
-                                height: 100.w,
-                                fit: BoxFit.cover,
-                              ),
+                          GestureDetector(
+                            onTap: pickImage,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: 110.w,
+                                  height: 110.w,
+                                  padding: EdgeInsets.all(4.w),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(70.w),
+                                    border: Border.all(
+                                      color: AppColors.of(
+                                        context,
+                                      ).primaryColor10,
+                                      width: 1.w,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(50.w),
+                                    child: imageFile != null
+                                        ? Image.file(
+                                            imageFile!,
+                                            width: 100.w,
+                                            height: 100.w,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : imageUrl != null
+                                        ? Image.network(
+                                            imageUrl!,
+                                            width: 100.w,
+                                            height: 100.w,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            "assets/profilez.png",
+                                            width: 100.w,
+                                            height: 100.w,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                ),
+
+                                if (isLoading)
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.of(
+                                          context,
+                                        ).neutralColor9,
+                                        borderRadius: BorderRadius.circular(
+                                          70.w,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.of(
+                                            context,
+                                          ).primaryColor10,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 2,
+                                  child: Container(
+                                    padding: EdgeInsets.all(5.w),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor10,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor1,
+                                      size: 16.w,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
@@ -96,32 +346,113 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ).primaryColor10,
                                     ),
                                     SizedBox(width: 20.w),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          S.of(context).name,
-                                          style: AppTextStyles.of(context)
-                                              .bold20
-                                              .copyWith(
+                                    Expanded(
+                                      child: isEditName
+                                          ? Container(
+                                              margin: EdgeInsets.symmetric(
+                                                vertical: 6.w,
+                                              ),
+                                              height: 40.w,
+                                              padding: EdgeInsets.only(
+                                                left: 10.w,
+                                                right: 10.w,
+                                                top: 10.w,
+                                              ),
+                                              decoration: BoxDecoration(
                                                 color: AppColors.of(
                                                   context,
-                                                ).neutralColor10,
+                                                ).neutralColor6,
+                                                borderRadius:
+                                                    BorderRadius.circular(8.w),
                                               ),
-                                        ),
-                                        Text(
-                                          name!,
-                                          style: AppTextStyles.of(context)
-                                              .regular24
-                                              .copyWith(
-                                                color: AppColors.of(
-                                                  context,
-                                                ).neutralColor12,
+                                              child: TextFormField(
+                                                controller: nameController,
+                                                style: AppTextStyles.of(context)
+                                                    .regular24
+                                                    .copyWith(
+                                                      color: AppColors.of(
+                                                        context,
+                                                      ).neutralColor12,
+                                                    ),
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  hintText: "Nhập tên của bạn",
+                                                ),
                                               ),
-                                        ),
-                                      ],
+                                            )
+                                          : Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "Họ tên:",
+                                                  style:
+                                                      AppTextStyles.of(
+                                                        context,
+                                                      ).bold20.copyWith(
+                                                        color: AppColors.of(
+                                                          context,
+                                                        ).neutralColor10,
+                                                      ),
+                                                ),
+                                                Text(
+                                                  name ?? "Chưa có tên",
+                                                  style:
+                                                      AppTextStyles.of(
+                                                        context,
+                                                      ).regular24.copyWith(
+                                                        color: AppColors.of(
+                                                          context,
+                                                        ).neutralColor12,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                     ),
+
+                                    if (!isEditName)
+                                      IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            isEditName = true;
+                                          });
+                                        },
+                                        icon: Icon(
+                                          Icons.edit_outlined,
+                                          size: 24.w,
+                                          color: AppColors.of(
+                                            context,
+                                          ).primaryColor10,
+                                        ),
+                                      ),
+                                    if (isEditName)
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            onPressed: updateName,
+                                            icon: Icon(
+                                              Icons.check,
+                                              size: 24.w,
+                                              color: Colors.green,
+                                            ),
+                                          ),
+
+                                          IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                isEditName = false;
+                                                nameController.text =
+                                                    name ?? "";
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.close,
+                                              size: 24.w,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                   ],
                                 ),
                               ),
@@ -157,7 +488,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          S.of(context).email,
+                                          "Email:",
                                           style: AppTextStyles.of(context)
                                               .bold20
                                               .copyWith(
@@ -167,7 +498,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                               ),
                                         ),
                                         Text(
-                                          email!,
+                                          email ?? "Email trống",
                                           style: AppTextStyles.of(context)
                                               .regular24
                                               .copyWith(
@@ -184,23 +515,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
 
-                          // Language
+                          // Mode sáng tối
                           SizedBox(height: 20.h),
                           GestureDetector(
-                            onTap: () async {
-                              Locale current = await SharedPref().getLanguage();
-                              Locale newLocale = current.languageCode == 'en'
-                                  ? Locale("vi")
-                                  : Locale("en");
-
-                              await SharedPref().setLanguage(
-                                newLocale.languageCode,
-                              );
-                              MyApp.setLocale(context, newLocale);
-                              setState(() {
-                                newLocale.languageCode == 'en';
-                              });
-                            },
+                            onTap: toggleTheme,
                             child: Container(
                               margin: EdgeInsets.symmetric(horizontal: 20.w),
                               child: Material(
@@ -219,7 +537,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        Icons.language,
+                                        Icons.brightness_6_outlined,
                                         size: 30.w,
                                         color: AppColors.of(
                                           context,
@@ -227,7 +545,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                       SizedBox(width: 20.w),
                                       Text(
-                                        S.of(context).english,
+                                        "Chế độ sáng/tối",
                                         style: AppTextStyles.of(context)
                                             .regular24
                                             .copyWith(
@@ -238,7 +556,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                       Spacer(),
                                       Icon(
-                                        Icons.change_circle_outlined,
+                                        Icons.toggle_on_outlined,
                                         size: 30.w,
                                         color: AppColors.of(
                                           context,
@@ -287,7 +605,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                       SizedBox(width: 20.w),
                                       Text(
-                                        S.of(context).logOut,
+                                        "Đăng xuất",
                                         style: AppTextStyles.of(context)
                                             .regular24
                                             .copyWith(
@@ -310,111 +628,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
                           ),
-
-                          // Delete user
-                          SizedBox(height: 40.h),
-                          // Phần này đã Ok nhưng số dư trong ví > 0 cũng sẽ bị mất
-                          //=> chưa có hướng xử lí khi số dư > 0 nếu xóa sẽ mất luôn
-                          // GestureDetector(
-                          //   onTap: () async {
-                          //     bool? confirmDel = await showDialog(
-                          //       context: context,
-                          //       builder: (context) {
-                          //         return AlertDialog(
-                          //           title: Text(
-                          //             "Confirm delete account",
-                          //             style: AppTextStyles.of(
-                          //               context,
-                          //             ).bold24.copyWith(color: Colors.red),
-                          //           ),
-                          //           actions: [
-                          //             TextButton(
-                          //               onPressed: () {
-                          //                 Navigator.of(context).pop(false);
-                          //               },
-                          //               child: Text(
-                          //                 "Cancel",
-                          //                 style: AppTextStyles.of(context)
-                          //                     .regular20
-                          //                     .copyWith(
-                          //                       color: AppColors.of(
-                          //                         context,
-                          //                       ).neutralColor12,
-                          //                     ),
-                          //               ),
-                          //             ),
-
-                          //             TextButton(
-                          //               onPressed: () {
-                          //                 Navigator.of(context).pop(true);
-                          //               },
-                          //               child: Text(
-                          //                 "Agree",
-                          //                 style: AppTextStyles.of(context)
-                          //                     .regular20
-                          //                     .copyWith(color: Colors.red),
-                          //               ),
-                          //             ),
-                          //           ],
-                          //         );
-                          //       },
-                          //     );
-
-                          //     if (confirmDel == true) {
-                          //       await AuthMethods().deleteUser();
-                          //       await Future.delayed(
-                          //         Duration(microseconds: 400),
-                          //       );
-                          //       Navigator.pushAndRemoveUntil(
-                          //         context,
-                          //         MaterialPageRoute(
-                          //           builder: (_) => Onboarding(),
-                          //         ),
-                          //         (route) => false,
-                          //       );
-                          //     }
-                          //   },
-                          //   child: Container(
-                          //     margin: EdgeInsets.symmetric(horizontal: 20.w),
-                          //     child: Material(
-                          //       borderRadius: BorderRadius.circular(18.w),
-                          //       elevation: 3.0,
-                          //       child: Container(
-                          //         width: MediaQuery.of(context).size.width,
-                          //         padding: EdgeInsets.symmetric(
-                          //           horizontal: 20.w,
-                          //           vertical: 8.w,
-                          //         ),
-                          //         decoration: BoxDecoration(
-                          //           color: Colors.red.shade500,
-                          //           borderRadius: BorderRadius.circular(18.w),
-                          //         ),
-                          //         child: Row(
-                          //           children: [
-                          //             Icon(
-                          //               Icons.delete_outlined,
-                          //               size: 30.w,
-                          //               color: Colors.white,
-                          //             ),
-                          //             SizedBox(width: 20.w),
-                          //             Text(
-                          //               "Delete account",
-                          //               style: AppTextStyles.of(context)
-                          //                   .regular24
-                          //                   .copyWith(color: Colors.white),
-                          //             ),
-                          //             Spacer(),
-                          //             Icon(
-                          //               Icons.arrow_forward_ios_outlined,
-                          //               size: 20.w,
-                          //               color: Colors.white,
-                          //             ),
-                          //           ],
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
                         ],
                       ),
                     ),

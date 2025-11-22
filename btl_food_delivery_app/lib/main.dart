@@ -1,12 +1,10 @@
-import 'package:btl_food_delivery_app/admin/Auth/admin_login_page.dart';
 import 'package:btl_food_delivery_app/core/config/theme_config.dart';
 import 'package:btl_food_delivery_app/core/constants/stripe_key_constants.dart';
 import 'package:btl_food_delivery_app/l10n/app_localizations.dart';
 import 'package:btl_food_delivery_app/l10n/l10n.dart';
-import 'package:btl_food_delivery_app/pages/Auth/login_page.dart';
 import 'package:btl_food_delivery_app/pages/bottom_nav.dart';
 import 'package:btl_food_delivery_app/pages/onboarding.dart';
-import 'package:btl_food_delivery_app/routes/app_routes.dart';
+import 'package:btl_food_delivery_app/components/app_routes.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';

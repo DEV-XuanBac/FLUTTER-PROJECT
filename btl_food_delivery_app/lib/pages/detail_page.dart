@@ -2,27 +2,22 @@ import 'dart:convert';
 
 import 'package:btl_food_delivery_app/core/constants/stripe_key_constants.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
-import 'package:btl_food_delivery_app/l10n/l10n.dart';
+import 'package:btl_food_delivery_app/model/food_model.dart';
 import 'package:btl_food_delivery_app/services/database.dart';
 import 'package:btl_food_delivery_app/services/shared_pref.dart';
-import 'package:btl_food_delivery_app/services/widget_support.dart';
+import 'package:btl_food_delivery_app/components/widget_support.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:random_string/random_string.dart';
 
 // ignore: must_be_immutable
 class DetailPage extends StatefulWidget {
-  String image, name, price;
-  DetailPage({
-    super.key,
-    required this.image,
-    required this.name,
-    required this.price,
-  });
-
+  final FoodModel food;
+  DetailPage({super.key, required this.food});
   @override
   State<DetailPage> createState() => _DetailPageState();
 }
@@ -30,7 +25,8 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   int quantity = 1;
   double totalPrice = 0;
-  bool isExpanded = false; // Biến trạng thái để kiểm soát mở rộng text\
+  bool isExpanded = false; // Biến trạng thái để kiểm soát mở rộng text
+  bool isLoading = false;
 
   Map<String, dynamic>? paymentIntent;
   String? name, id, email, address, wallet;
@@ -49,15 +45,26 @@ class _DetailPageState extends State<DetailPage> {
     QuerySnapshot querySnapshot = await DatabaseMethods().getUserWalletByEmail(
       email!,
     );
-    wallet = "${querySnapshot.docs[0]["wallet"]}";
-    setState(() {});
+
+    if (querySnapshot.docs.isNotEmpty && mounted) {
+      setState(() {
+        wallet = "${querySnapshot.docs[0]["wallet"]}";
+      });
+    }
   }
 
   @override
   void initState() {
-    totalPrice = double.parse(widget.price);
+    totalPrice = widget.food.price ?? 0;
     getUserWallet();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    addressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,6 +76,7 @@ class _DetailPageState extends State<DetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // AppBar
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
@@ -86,25 +94,112 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                 ),
               ),
+              SizedBox(height: 10.h),
 
+              // Ảnh sản phẩm
               Center(
-                child: Image.asset(
-                  widget.image,
-                  height: MediaQuery.of(context).size.height / 3,
-                  fit: BoxFit.contain,
+                child: Container(
+                  height: 250.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16.w),
+                    color: AppColors.of(context).neutralColor7,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16.w),
+                    child: widget.food.image!.startsWith("http")
+                        ? Image.network(
+                            widget.food.image!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.of(context).neutralColor6,
+                                child: Icon(
+                                  Icons.fastfood,
+                                  size: 60.w,
+                                  color: AppColors.of(context).neutralColor10,
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: AppColors.of(context).neutralColor6,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress
+                                                  .expectedTotalBytes!
+                                        : null,
+                                    color: AppColors.of(context).primaryColor10,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            "assets/imagePick.png",
+                            fit: BoxFit.cover,
+                          ),
+                  ),
                 ),
               ),
 
               Text(
-                widget.name,
+                widget.food.name ?? "Đoán xem món gì :))",
                 style: AppWidget.HeadlineTextFieldStyle(context),
               ),
 
-              Text(
-                "\$ ${widget.price}",
-                style: AppWidget.SimpleTextFieldStyle(context),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "\$ ${widget.food.price?.toStringAsFixed(2) ?? "0.0"}",
+                    style: AppTextStyles.of(context).regular32.copyWith(
+                      color: AppColors.of(context).primaryColor9,
+                    ),
+                  ),
+                  if (widget.food.kcal != null)
+                    Container(
+                      width: 100.w,
+                      decoration: BoxDecoration(
+                        color: AppColors.of(context).neutralColor3,
+                        borderRadius: BorderRadius.circular(14.w),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.local_fire_department,
+                            color: AppColors.of(context).primaryColor10,
+                            size: 20.w,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            "${widget.food.kcal} kcal",
+                            style: AppTextStyles.of(context).bold20.copyWith(
+                              color: AppColors.of(context).neutralColor12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
 
+              Text(
+                "Thành phần: ${widget.food.item!}",
+                style: AppTextStyles.of(context).regular24.copyWith(
+                  color: AppColors.of(context).neutralColor11,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Mô tả
               AnimatedSize(
                 duration: Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -113,7 +208,13 @@ class _DetailPageState extends State<DetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Bánh cuốn Hà Nội là một món ăn truyền thống thanh đạm nhưng đầy tinh tế, làm say lòng biết bao thực khách. Lớp bánh được tráng mỏng tang, trắng trong từ bột gạo, quyện trong lớp nhân thơm phức từ thịt xay cùng mộc nhĩ, hành khô. Bánh cuốn nóng hổi được dùng kèm nước chấm chua ngọt đậm đà, điểm xuyến vài cọng hành lá xanh, rau thơm thơm mát. Không thể thiếu chả quế thơm lừng, cà cuống giòn rụm tạo nên hương vị đặc trưng, hòa quyện cùng vị bùi của bánh, vị chua cay mặn ngọt của nước chấm, tất cả tạo nên một dư vị khó quên, là linh hồn của ẩm thực Hà Nội.",
+                        "Mô tả",
+                        style: AppTextStyles.of(context).bold24.copyWith(
+                          color: AppColors.of(context).neutralColor11,
+                        ),
+                      ),
+                      Text(
+                        widget.food.description ?? "Không có mô tả",
                         maxLines: isExpanded
                             ? null // null khi mở rộng
                             : 3, // 3 dòng khi thu gọn
@@ -133,9 +234,7 @@ class _DetailPageState extends State<DetailPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              isExpanded
-                                  ? S.of(context).readLess
-                                  : S.of(context).readMore,
+                              isExpanded ? "Thu gọn" : "Đọc thêm",
                               style: AppTextStyles.of(context).light24.copyWith(
                                 color: AppColors.of(context).primaryColor8,
                               ),
@@ -157,7 +256,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
 
               Text(
-                S.of(context).quantity,
+                "Số lượng",
                 style: AppTextStyles.of(
                   context,
                 ).bold32.copyWith(color: AppColors.of(context).neutralColor11),
@@ -165,14 +264,12 @@ class _DetailPageState extends State<DetailPage> {
 
               Row(
                 children: [
+                  // Nút giảm
                   GestureDetector(
                     onTap: () {
                       if (quantity > 1) {
                         quantity = quantity - 1;
-                        totalPrice = double.parse(
-                          (totalPrice - double.parse(widget.price))
-                              .toStringAsFixed(2),
-                        );
+                        totalPrice = (widget.food.price ?? 0) * quantity;
                         setState(() {});
                       }
                     },
@@ -182,7 +279,9 @@ class _DetailPageState extends State<DetailPage> {
                       child: Container(
                         padding: EdgeInsets.all(5.w),
                         decoration: BoxDecoration(
-                          color: AppColors.of(context).primaryColor9,
+                          color: quantity > 1
+                              ? AppColors.of(context).primaryColor9
+                              : AppColors.of(context).neutralColor10,
                           borderRadius: BorderRadius.circular(10.w),
                         ),
                         child: Icon(
@@ -196,14 +295,14 @@ class _DetailPageState extends State<DetailPage> {
                   SizedBox(width: 15.w),
                   Text("$quantity", style: AppTextStyles.of(context).bold32),
                   SizedBox(width: 15.w),
+
+                  // Nút tăng
                   GestureDetector(
                     onTap: () {
-                      quantity = quantity + 1;
-                      totalPrice = double.parse(
-                        (totalPrice + double.parse(widget.price))
-                            .toStringAsFixed(2),
-                      );
-                      setState(() {});
+                      setState(() {
+                        quantity = quantity + 1;
+                        totalPrice = (widget.food.price ?? 0) * quantity;
+                      });
                     },
                     child: Material(
                       elevation: 3.0,
@@ -226,11 +325,14 @@ class _DetailPageState extends State<DetailPage> {
                   Material(
                     elevation: 3.0,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20.w),
-                      bottomRight: Radius.circular(20.w),
+                      topLeft: Radius.circular(50.w),
+                      bottomRight: Radius.circular(50.w),
                     ),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 30.w),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 5.w,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.of(context).primaryColor9,
                         borderRadius: BorderRadius.only(
@@ -239,7 +341,7 @@ class _DetailPageState extends State<DetailPage> {
                         ),
                       ),
                       child: Text(
-                        "\$ ${totalPrice.toString()}",
+                        "\$ ${totalPrice.toStringAsFixed(2)}",
                         style: AppTextStyles.of(context).bold32.copyWith(
                           color: AppColors.of(context).neutralColor1,
                         ),
@@ -248,89 +350,103 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                 ],
               ),
-              SizedBox(height: 30.h),
+              SizedBox(height: 10.h),
 
-              // Button ORDER
-              Center(
-                child: GestureDetector(
-                  onTap: () async {
-                    if (address == null) {
-                      openBox();
-                    } else if (double.parse(wallet!) > totalPrice) {
-                      double updatedWallet = double.parse(wallet!) - totalPrice;
-                      DatabaseMethods().updateUserWallet(
-                        updatedWallet.toString(),
-                        id!,
-                      );
-                      String orderId = randomAlphaNumeric(10);
-                      Map<String, dynamic> userOrderMap = {
-                        "name": name,
-                        "id": id,
-                        "quantity": quantity.toString(),
-                        "total": totalPrice.toString(),
-                        "email": email,
-                        "food_name": widget.name,
-                        "food_image": widget.image,
-                        "order_id": orderId,
-                        "status": "Pending",
-                        "address": address ?? addressController.text,
-                      };
-                      await DatabaseMethods().addUserOrderDetails(
-                        userOrderMap,
-                        id!,
-                        orderId,
-                      );
-                      await DatabaseMethods().addAdminOrderDetails(
-                        userOrderMap,
-                        orderId,
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: Colors.green,
-                          content: Text(
-                            S.of(context).orderSuccess,
-                            style: AppTextStyles.of(context).bold24.copyWith(
-                              color: AppColors.of(context).neutralColor12,
-                            ),
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: Colors.red,
-                          content: Text(
-                            S.of(context).addMoneyWallet,
-                            style: AppTextStyles.of(context).bold24.copyWith(
-                              color: AppColors.of(context).neutralColor12,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Material(
-                    elevation: 3.0,
-                    borderRadius: BorderRadius.circular(20.w),
-                    child: Container(
-                      height: 56.h,
-                      width: 180.w,
-                      decoration: BoxDecoration(
-                        color: AppColors.of(context).primaryColor8,
-                        borderRadius: BorderRadius.circular(20.w),
-                      ),
-                      child: Center(
-                        child: Text(
-                          S.of(context).ordersNow,
-                          style: AppTextStyles.of(context).bold32.copyWith(
-                            color: AppColors.of(context).neutralColor1,
-                          ),
-                        ),
-                      ),
+              if (wallet != null)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.of(context).neutralColor1,
+                    borderRadius: BorderRadius.circular(12.w),
+                    border: Border.all(
+                      color: double.parse(wallet!) >= totalPrice
+                          ? Colors.green
+                          : Colors.orange,
+                      width: 1.w,
                     ),
                   ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        double.parse(wallet!) >= totalPrice
+                            ? Icons.check_circle
+                            : Icons.warning,
+                        color: double.parse(wallet!) >= totalPrice
+                            ? Colors.green
+                            : Colors.orange,
+                        size: 24.w,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Text(
+                          double.parse(wallet!) >= totalPrice
+                              ? "Số dư khả dụng: \$$wallet"
+                              : "Số dư không đủ: \$$wallet, hãy nạp thêm!",
+                          style: AppTextStyles.of(context).regular20.copyWith(
+                            color: AppColors.of(context).neutralColor12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
+              SizedBox(height: 10.h),
+              // Button ORDER
+              Center(
+                child: isLoading
+                    ? CircularProgressIndicator()
+                    : GestureDetector(
+                        onTap: () async {
+                          if (address == null) {
+                            openBox();
+                          } else if (double.parse(wallet!) >= totalPrice) {
+                            createOrder();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.red,
+                                content: Text(
+                                  "Nạp thêm tiền vào tài khoản",
+                                  style: AppTextStyles.of(context).bold24
+                                      .copyWith(
+                                        color: AppColors.of(
+                                          context,
+                                        ).neutralColor12,
+                                      ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Material(
+                          elevation: 8.0,
+                          borderRadius: BorderRadius.circular(16.w),
+                          child: Container(
+                            height: 56.h,
+                            width: 200.w,
+                            decoration: BoxDecoration(
+                              color: AppColors.of(context).primaryColor9,
+                              borderRadius: BorderRadius.circular(16.w),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Đặt hàng ngay",
+                                style: AppTextStyles.of(context).bold32
+                                    .copyWith(
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor1,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
               ),
               SizedBox(height: 30.h),
             ],
@@ -338,6 +454,81 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
     );
+  }
+
+  Future<void> createOrder() async {
+    if (isLoading) return;
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      double updateWallet = double.parse(wallet!) - totalPrice;
+      await DatabaseMethods().updateUserWallet(
+        updateWallet.toStringAsFixed(2),
+        id!,
+      );
+
+      // Tạo bảng order
+      String orderId = randomAlphaNumeric(10);
+      Map<String, dynamic> userOrderMap = {
+        "username": name,
+        "id": id,
+        "quantity": quantity.toString(),
+        "total": totalPrice.toStringAsFixed(2),
+        "email": email,
+        "foodName": widget.food.name,
+        "foodImage": widget.food.image,
+        "orderId": orderId,
+        "status": "Pending",
+        "address": address!,
+        "createdAt": FieldValue.serverTimestamp(),
+      };
+
+      await DatabaseMethods().addUserOrderDetails(userOrderMap, id!, orderId);
+      await DatabaseMethods().addAdminOrderDetails(userOrderMap, orderId);
+
+      Map<String, dynamic> transactionMap = {
+        "type": "order",
+        "amount": totalPrice.toStringAsFixed(2),
+        "orderId": orderId,
+        "foodName": widget.food.name,
+        "date": DateFormat("dd/MM/yyyy - HH:mm").format(DateTime.now()),
+        "timestamp": FieldValue.serverTimestamp(),
+      };
+      await DatabaseMethods().addUserTransaction(transactionMap, id!);
+
+      if (mounted) {
+        setState(() {
+          wallet = updateWallet.toStringAsFixed(2);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              "Đặt hàng thành công!",
+              style: AppTextStyles.of(context).bold20,
+            ),
+          ),
+        );
+
+        // Tự quay lại sau 2s
+        Future.delayed(Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> makePayment(String amount) async {
@@ -372,7 +563,7 @@ class _DetailPageState extends State<DetailPage> {
                     Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.green),
-                        Text(S.of(context).paymentSuccessful),
+                        Text("Thanh toán thành công"),
                       ],
                     ),
                   ],
@@ -388,7 +579,7 @@ class _DetailPageState extends State<DetailPage> {
       print("Error is: --> $e");
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(content: Text(S.of(context).cancelled)),
+        builder: (_) => AlertDialog(content: Text("Quay lại")),
       );
     } catch (e) {
       print("$e");
@@ -429,80 +620,79 @@ class _DetailPageState extends State<DetailPage> {
     context: context,
     builder: (context) => AlertDialog(
       content: SingleChildScrollView(
-        child: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  SizedBox(width: 30.w),
-                  Text(
-                    S.of(context).addAddress,
-                    style: AppTextStyles.of(context).bold32.copyWith(
-                      color: AppColors.of(context).primaryColor10,
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                SizedBox(width: 30.w),
+                Text(
+                  "Thêm địa chỉ",
+                  style: AppTextStyles.of(context).bold24.copyWith(
+                    color: AppColors.of(context).primaryColor10,
                   ),
-                  SizedBox(width: 10.w),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Icon(Icons.cancel, size: 26.w),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 15.w),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: AppColors.of(context).neutralColor9,
-                    width: 1.w,
-                  ),
-                  borderRadius: BorderRadius.circular(14.w),
                 ),
-                child: TextField(
-                  controller: addressController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: S.of(context).address,
-                    hintStyle: AppTextStyles.of(context).regular24.copyWith(
-                      color: AppColors.of(context).neutralColor11,
-                    ),
-                  ),
-                  style: AppTextStyles.of(context).regular24.copyWith(
+                SizedBox(width: 10.w),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Icon(Icons.cancel, size: 26.w),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 15.w),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: AppColors.of(context).neutralColor9,
+                  width: 1.w,
+                ),
+                borderRadius: BorderRadius.circular(14.w),
+              ),
+              child: TextField(
+                controller: addressController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "Địa chỉ của bạn",
+                  hintStyle: AppTextStyles.of(context).regular24.copyWith(
                     color: AppColors.of(context).neutralColor11,
                   ),
                 ),
+                style: AppTextStyles.of(context).regular24.copyWith(
+                  color: AppColors.of(context).neutralColor11,
+                ),
               ),
-              SizedBox(height: 20.h),
-              GestureDetector(
-                onTap: () async {
-                  address = addressController.text;
-                  await SharedPref().saveUserAddress(addressController.text);
-                  Navigator.pop(context);
-                },
-                child: Center(
-                  child: Container(
-                    width: 130.w,
-                    padding: EdgeInsets.all(5.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.of(context).primaryColor9,
-                      borderRadius: BorderRadius.circular(10.w),
-                    ),
-                    child: Center(
-                      child: Text(
-                        S.of(context).add,
-                        style: AppTextStyles.of(context).bold24.copyWith(
-                          color: AppColors.of(context).neutralColor1,
-                        ),
+            ),
+            SizedBox(height: 20.h),
+            GestureDetector(
+              onTap: () async {
+                address = addressController.text;
+                await SharedPref().saveUserAddress(addressController.text);
+                Navigator.pop(context);
+              },
+              child: Center(
+                child: Container(
+                  width: 130.w,
+                  padding: EdgeInsets.all(5.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.of(context).primaryColor9,
+                    borderRadius: BorderRadius.circular(10.w),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Cập nhật",
+                      style: AppTextStyles.of(context).bold24.copyWith(
+                        color: AppColors.of(context).neutralColor1,
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     ),

@@ -1,6 +1,6 @@
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
 import 'package:btl_food_delivery_app/pages/Auth/login_page.dart';
-import 'package:btl_food_delivery_app/services/widget_support.dart';
+import 'package:btl_food_delivery_app/components/widget_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 

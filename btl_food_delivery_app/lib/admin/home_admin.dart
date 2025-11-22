@@ -1,4 +1,7 @@
+import 'package:btl_food_delivery_app/admin/Auth/admin_login_page.dart';
 import 'package:btl_food_delivery_app/admin/all_order.dart';
+import 'package:btl_food_delivery_app/admin/manage_categories.dart';
+import 'package:btl_food_delivery_app/admin/manage_foods.dart';
 import 'package:btl_food_delivery_app/admin/manage_users.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
 import 'package:flutter/material.dart';
@@ -124,11 +127,17 @@ class _HomeAdminState extends State<HomeAdmin> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Image.asset(
-                                "assets/profilez.png",
-                                width: 80.w,
-                                height: 80.h,
-                                fit: BoxFit.contain,
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 14.w,
+                                  horizontal: 10.w,
+                                ),
+                                child: Image.asset(
+                                  "assets/profilez.png",
+                                  width: 50.w,
+                                  height: 50.h,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                               Text(
                                 "Manage Users",
@@ -151,6 +160,224 @@ class _HomeAdminState extends State<HomeAdmin> {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+                  // Quản lí sản phẩm
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ManageFoods()),
+                      );
+                    },
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Material(
+                        elevation: 3.0,
+                        borderRadius: BorderRadius.circular(20.w),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.fromLTRB(5.w, 5.w, 20.w, 5.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.of(context).neutralColor1,
+                            borderRadius: BorderRadius.circular(20.w),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 14.w,
+                                  horizontal: 10.w,
+                                ),
+                                child: Image.asset(
+                                  "assets/doanchill.jpg",
+                                  width: 50.w,
+                                  height: 50.h,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Text(
+                                "Manage Food List",
+                                style: AppTextStyles.of(context).bold32
+                                    .copyWith(
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor12,
+                                    ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.all(7.w),
+                                decoration: BoxDecoration(
+                                  color: AppColors.of(context).primaryColor9,
+                                  borderRadius: BorderRadius.circular(50.w),
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: AppColors.of(context).neutralColor1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+                  // Quản lí danh mục
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ManageCategories()),
+                      );
+                    },
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Material(
+                        elevation: 3.0,
+                        borderRadius: BorderRadius.circular(20.w),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.fromLTRB(5.w, 5.w, 20.w, 5.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.of(context).neutralColor1,
+                            borderRadius: BorderRadius.circular(20.w),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 14.w,
+                                  horizontal: 10.w,
+                                ),
+                                child: Image.asset(
+                                  "assets/doanchill.jpg",
+                                  width: 50.w,
+                                  height: 50.h,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Text(
+                                "Manage Categories",
+                                style: AppTextStyles.of(context).bold32
+                                    .copyWith(
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor12,
+                                    ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.all(7.w),
+                                decoration: BoxDecoration(
+                                  color: AppColors.of(context).primaryColor9,
+                                  borderRadius: BorderRadius.circular(50.w),
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: AppColors.of(context).neutralColor1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+                  // Thống kê doanh số
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Material(
+                        elevation: 3.0,
+                        borderRadius: BorderRadius.circular(20.w),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.fromLTRB(5.w, 5.w, 20.w, 5.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.of(context).neutralColor1,
+                            borderRadius: BorderRadius.circular(20.w),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 14.w,
+                                  horizontal: 10.w,
+                                ),
+                                child: Image.asset(
+                                  "assets/doanchill.jpg",
+                                  width: 50.w,
+                                  height: 50.h,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              Text(
+                                "Sales Statistics",
+                                style: AppTextStyles.of(context).bold32
+                                    .copyWith(
+                                      color: AppColors.of(
+                                        context,
+                                      ).neutralColor12,
+                                    ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.all(7.w),
+                                decoration: BoxDecoration(
+                                  color: AppColors.of(context).primaryColor9,
+                                  borderRadius: BorderRadius.circular(50.w),
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: AppColors.of(context).neutralColor1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+                  // Đăng xuất
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => AdminLoginPage()),
+                      );
+                    },
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Material(
+                        elevation: 3.0,
+                        borderRadius: BorderRadius.circular(20.w),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.fromLTRB(5.w, 5.w, 20.w, 5.w),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade700,
+                            borderRadius: BorderRadius.circular(20.w),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Log Out",
+                              style: AppTextStyles.of(
+                                context,
+                              ).bold32.copyWith(color: Colors.white),
+                            ),
                           ),
                         ),
                       ),
