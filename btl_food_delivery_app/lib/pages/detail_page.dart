@@ -458,7 +458,7 @@ class _DetailPageState extends State<DetailPage> {
                                   openBox();
                                 } else if (double.parse(wallet!) >=
                                     totalPrice) {
-                                  createOrder();
+                                  showConfirmDialog();
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -509,6 +509,103 @@ class _DetailPageState extends State<DetailPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> showConfirmDialog() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Xác nhận đặt hàng",
+            style: AppTextStyles.of(
+              context,
+            ).bold24.copyWith(color: AppColors.of(context).primaryColor10),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Tên món: ${widget.food.name}",
+                  style: AppTextStyles.of(context).regular24.copyWith(
+                    color: AppColors.of(context).neutralColor12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 5.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Số lượng: $quantity",
+                      style: AppTextStyles.of(context).regular20.copyWith(
+                        color: AppColors.of(context).neutralColor12,
+                      ),
+                    ),
+                    Text(
+                      "Tổng tiền: \$${totalPrice.toStringAsFixed(2)}",
+                      style: AppTextStyles.of(context).regular20.copyWith(
+                        color: AppColors.of(context).primaryColor10,
+                      ),
+                    ),
+                  ],
+                ),
+                Divider(color: AppColors.of(context).neutralColor8),
+                Text(
+                  "Địa chỉ: $address",
+                  style: AppTextStyles.of(context).regular20.copyWith(
+                    color: AppColors.of(context).neutralColor12,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  "Số điện thoại: $phone",
+                  style: AppTextStyles.of(context).regular20.copyWith(
+                    color: AppColors.of(context).neutralColor11,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  "Người nhận: $name",
+                  style: AppTextStyles.of(context).regular20.copyWith(
+                    color: AppColors.of(context).neutralColor11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "Hủy",
+                style: AppTextStyles.of(
+                  context,
+                ).bold24.copyWith(color: AppColors.of(context).neutralColor11),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                createOrder(); // Thực hiện đặt hàng
+              },
+              child: Text(
+                "Thanh Toán",
+                style: AppTextStyles.of(
+                  context,
+                ).bold24.copyWith(color: AppColors.of(context).primaryColor10),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -751,25 +848,13 @@ class _DetailPageState extends State<DetailPage> {
             SizedBox(height: 20.h),
             GestureDetector(
               onTap: () async {
-                if (addressController.text.isEmpty) {
+                if (addressController.text.isEmpty ||
+                    phoneController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       backgroundColor: Colors.red,
                       content: Text(
-                        "Vui lòng nhập địa chỉ nhận hàng",
-                        style: AppTextStyles.of(context).regular20,
-                      ),
-                    ),
-                  );
-                  return;
-                }
-
-                if (phoneController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Text(
-                        "Vui lòng nhập số điện thoại",
+                        "Vui lòng nhập đầy đủ thông tin",
                         style: AppTextStyles.of(context).regular20,
                       ),
                     ),

@@ -313,7 +313,7 @@ class _ManageUsersState extends State<ManageUsers> {
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Image.asset(
-                                      "assets/profilez.png",
+                                      "assets/profile.png",
                                       width: 70.w,
                                       height: 70.h,
                                       fit: BoxFit.cover,
@@ -321,7 +321,7 @@ class _ManageUsersState extends State<ManageUsers> {
                                   },
                                 )
                               : Image.asset(
-                                  "assets/profilez.png",
+                                  "assets/profile.png",
                                   width: 70.w,
                                   height: 70.h,
                                   fit: BoxFit.cover,

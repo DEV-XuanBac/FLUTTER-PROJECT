@@ -3,6 +3,7 @@ import 'package:btl_food_delivery_app/admin/all_order.dart';
 import 'package:btl_food_delivery_app/admin/manage_categories.dart';
 import 'package:btl_food_delivery_app/admin/manage_foods.dart';
 import 'package:btl_food_delivery_app/admin/manage_users.dart';
+import 'package:btl_food_delivery_app/admin/sale_statistics.dart';
 import 'package:btl_food_delivery_app/core/extensions/thems_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -126,7 +127,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                   horizontal: 10.w,
                                 ),
                                 child: Image.asset(
-                                  "assets/profilez.png",
+                                  "assets/profile.png",
                                   width: 50.w,
                                   height: 50.h,
                                   fit: BoxFit.contain,
@@ -182,7 +183,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                   horizontal: 10.w,
                                 ),
                                 child: Image.asset(
-                                  "assets/doanchill.jpg",
+                                  "assets/food.png",
                                   width: 50.w,
                                   height: 50.h,
                                   fit: BoxFit.contain,
@@ -238,7 +239,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                   horizontal: 10.w,
                                 ),
                                 child: Image.asset(
-                                  "assets/doanchill.jpg",
+                                  "assets/categories.png",
                                   width: 50.w,
                                   height: 50.h,
                                   fit: BoxFit.contain,
@@ -267,7 +268,12 @@ class _HomeAdminState extends State<HomeAdmin> {
                   SizedBox(height: 20.h),
                   // Thống kê doanh số
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => SaleStatistics()),
+                      );
+                    },
                     child: Container(
                       margin: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Material(
@@ -289,7 +295,7 @@ class _HomeAdminState extends State<HomeAdmin> {
                                   horizontal: 10.w,
                                 ),
                                 child: Image.asset(
-                                  "assets/doanchill.jpg",
+                                  "assets/statistics.png",
                                   width: 50.w,
                                   height: 50.h,
                                   fit: BoxFit.contain,

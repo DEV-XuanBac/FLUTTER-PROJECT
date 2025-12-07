@@ -209,7 +209,7 @@ class _ManageFoodsState extends State<ManageFoods> {
               child: Column(
                 children: [
                   SizedBox(
-                    height: MediaQuery.of(context).size.height / 1.5,
+                    height: MediaQuery.of(context).size.height / 1.3,
                     child: allFoods(),
                   ),
                 ],

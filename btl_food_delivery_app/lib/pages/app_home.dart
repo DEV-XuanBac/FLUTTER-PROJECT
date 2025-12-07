@@ -62,7 +62,7 @@ class _AppHomeState extends State<AppHome> {
         });
       }
     } catch (e) {
-      print("Lỗi load ảnht: $e");
+      print("Lỗi load ảnh: $e");
     }
   }
 
@@ -383,7 +383,7 @@ class _AppHomeState extends State<AppHome> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.asset(
-                        "assets/profilez.png",
+                        "assets/profile.png",
                         height: 48.w,
                         width: 48.w,
                         fit: BoxFit.cover,
@@ -399,7 +399,7 @@ class _AppHomeState extends State<AppHome> {
                     },
                   )
                 : Image.asset(
-                    "assets/profilez.png",
+                    "assets/profile.png",
                     height: 48.w,
                     width: 48.w,
                     fit: BoxFit.cover,
